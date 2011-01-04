@@ -28,4 +28,17 @@ Enabling/Disabling rules on a sensor:
 ATM, you can search msg, catagory, classification and metadata.
 You can also search for all rules that are default enabled by
 rule-set vendor (ET or VRT etc). Or you can easly enable a rule
-by "polman.pl -i $SENSORNAME -e <sid>
+by: "polman.pl -i $SENSORNAME -e <sid>"
+or disable:
+"polman.pl -i $SENSORNAME -d <sid>"
+
+Turn of rules but "filenames" (category):
+./polman.pl -i TESTS -m "-(dos|games|icmp_info|pop3|rpc|scada|scan|snmp|sql|voip)"
+...
+[*] Search term: -(dos|games|icmp_info|pop3|rpc|scada|scan|snmp|sql|voip)
+[*] Search field: catagory
+[*] Found 908 rule(s) matching search criterias...
+...
+[i] Do you want to Disable all rules for sensor panama? (y/N)?: y
+...
+

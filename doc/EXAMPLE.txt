@@ -38,6 +38,7 @@ polman.pl -i TESTS -s "ET BACKDOOR "
 catagory search:
 $ perl polman.pl -i $SENSOR -m "REGEX"
 polman.pl -i TESTS -m "emerging-web_specific_apps"
+polman.pl -i TESTS -m "-(dos|games|icmp_info|pop3|rpc|scada|scan|snmp|sql|voip)"
 
 classtype search:
 $ perl polman.pl -i $SENSOR -c "REGEX"
