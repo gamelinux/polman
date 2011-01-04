@@ -1,0 +1,31 @@
+polman is aimed at makeing rule administration
+for IPS/IDS sensors easy and powerfull.
+
+You can load different rule-sets into a RuleDB, say
+you load Sourcefire VRT rules in to ruledb snort2903
+and you also load Emerging Threats snort 2.9.0 rules
+into the same db.
+
+Then you should have a large repo of rules to play with :)
+
+If you also have suricata sensors, you can have
+a ruledb for suricata10, and load the vrt rules
+and the corrosponding ET-suricata rules into it.
+
+Currently, polman will activate all rules in the ruledb
+that is default activated from the the vendor (vrt/et/others),
+on the sensors that are associated with the ruledb.
+The activatation happens the first time you write out
+the rule file(s) to disk.
+
+When you download new rules from vendor into the ruledb
+specified rules dir, and updates the ruledb, next time
+you write new rules to disk for a sensor, it will automagically
+enable the rules that the upstream vendor ships in the
+state enabled.
+
+Enabling/Disabling rules on a sensor:
+ATM, you can search msg, catagory, classification and metadata.
+You can also search for all rules that are default enabled by
+rule-set vendor (ET or VRT etc). Or you can easly enable a rule
+by "polman.pl -i $SENSORNAME -e <sid>

@@ -1,0 +1,447 @@
+# INTRO
+polman is aimed at makeing rule administration
+for IPS/IDS sensors easy and powerfull.
+
+You can load different rule-sets into a RuleDB, say
+you load Sourcefire VRT rules in to ruledb snort2903
+and you also load Emerging Threats snort 2.9.0 rules
+into the same db.
+
+Then you should have a large repo of rules to play with :)
+
+If you also have suricata sensors, you can have
+a ruledb for suricata10, and load the vrt rules
+and the corrosponding ET-suricata rules into it.
+
+Currently, polman will activate all rules in the ruledb
+that is default activated from the the vendor (vrt/et/others),
+on the sensors that are associated with the ruledb.
+The activatation happens the first time you write out
+the rule file(s) to disk.
+
+When you download new rules from vendor into the ruledb
+specified rules dir, and updates the ruledb, next time
+you write new rules to disk for a sensor, it will automagically
+enable the rules that the upstream vendor ships in the
+state enabled.
+
+Enabling/Disabling rules on a sensor:
+ATM, you can search msg, catagory, classification and metadata.
+You can also search for all rules that are default enabled by
+rule-set vendor (ET or VRT etc). Or you can easly enable a rule
+by "polman.pl -i $SENSORNAME -e <sid>
+
+msg search:
+$ perl polman.pl -i $SENSOR -s "REGEX"
+polman.pl -i TESTS -s "ET BACKDOOR "
+
+catagory search:
+$ perl polman.pl -i $SENSOR -m "REGEX"
+polman.pl -i TESTS -m "emerging-web_specific_apps"
+
+classtype search:
+$ perl polman.pl -i $SENSOR -c "REGEX"
+polman.pl -i TESTS -c "attempted-admin"
+
+metadata search:
+$ perl polman.pl -i $SENSOR  -p "REGEX"
+polman.pl -i TESTS -p "policy security-ips drop"
+
+enabled search: (searches for default enabled rules)
+$ perl polman.pl -i TESTS -o [1/0]
+polman.pl -i TESTS -o 1
+
+# AN EXAMPLE
+
+$ perl polman.pl --conf
+[*] Starting main...
+[*] Loading ruledb and configs...
+
+ ************ Configuration Meny ************
+  Item |  Description                        
+    1  |  Edit Rule DB                       
+    2  |  Edit Sensor                        
+   99  |  Exit                               
+Enter Item: 1
+[*] No RuleDBs are defined, we need at least one! Adding...
+[*] Enter RuleDB name: TESTDB
+[*] RuleDB TESTDB does not exist... Creating it!
+[*] Please add comment: TEST
+[*] What engine type is it (snort/suricata/other)?: suricata
+[*] Please specify the path to load rules from: /tmp/rules/
+[*] You can now load rules into ruledb TESTDB
+
+ Current RuleDB: TESTDB
+ *************** Edit RuleDBs ***************
+  Item |  Description                        
+    1  |  Choose RuleDB to edit              
+    2  |  Add Rule DB (You need at least one)
+    3  |  Change RuleDB Name                 
+    4  |  Change RuleDB Engine Type          
+    5  |  Change RuleDB Comment              
+    6  |  Change RuleDB Rules Dir            
+    7  |  Show RuleDB Status                 
+    8  |  Load/Update Rules into RuleDB      
+   99  |  Back To Main Menu                  
+Enter Item: 7
+*------------------------------------------*
+[i] RuleDB       : TESTDB
+[i] Engine Type  : suricata
+[i] Rules Dir    : /tmp/rules/
+[i] Created      : Thu Dec 30 08:31:33 2010
+[i] Last Modified: Thu Dec 30 08:31:49 2010
+[i] Rules loaded : 0
+[i] Comment      : TEST
+
+ Current RuleDB: TESTDB
+ *************** Edit RuleDBs ***************
+  Item |  Description                        
+    1  |  Choose RuleDB to edit              
+    2  |  Add Rule DB (You need at least one)
+    3  |  Change RuleDB Name                 
+    4  |  Change RuleDB Engine Type          
+    5  |  Change RuleDB Comment              
+    6  |  Change RuleDB Rules Dir            
+    7  |  Show RuleDB Status                 
+    8  |  Load/Update Rules into RuleDB      
+   99  |  Back To Main Menu                  
+Enter Item: 8
+[*] Updating ruledb: TESTDB
+[*] Looking for rulefiles in /tmp/rules/
+[*] Total rules loaded: 14235
+[*] New sid: 100000102
+[*] New sid: 100000103
+[*] New sid: 100000104
+...
+...
+...
+[*] New sid: 993
+[*] New sid: 994
+
+ Current RuleDB: TESTDB
+ *************** Edit RuleDBs ***************
+  Item |  Description                        
+    1  |  Choose RuleDB to edit              
+    2  |  Add Rule DB (You need at least one)
+    3  |  Change RuleDB Name                 
+    4  |  Change RuleDB Engine Type          
+    5  |  Change RuleDB Comment              
+    6  |  Change RuleDB Rules Dir            
+    7  |  Show RuleDB Status                 
+    8  |  Load/Update Rules into RuleDB      
+   99  |  Back To Main Menu                  
+Enter Item: 99
+ ************ Configuration Meny ************
+  Item |  Description                        
+    1  |  Edit Rule DB                       
+    2  |  Edit Sensor                        
+   99  |  Exit                               
+Enter Item: 2
+[*] No Sensors are defined, we need at least one! Adding...
+[*] Enter Sensor name: TESTS
+[*] Sensor TESTS does not exist... Creating it!
+[*] Please add comment: TEST
+[*] What engine type is it (snort/suricata/other)?: suricata
+[*] Which Rule DB should this Sensor use: 
+ ************* Choose RuleDB ************
+  item |  RuleDB                   
+    1  |  TESTDB                   
+Enter item: 1
+[*] If a dir is specified, rules will be written to multiple files.
+[*] Enter file or dir to write rule to: /tmp/test2/
+[*] You can now add rules to sensor TESTS
+
+ Current Sensor: TESTS
+ ***************  Edit Sensors **************
+  Item |  Description                        
+    1  |  Choose Sensor to edit              
+    2  |  Add Sensor                         
+    3  |  Change Sensor Name                 
+    4  |  Change Sensor Engine Type          
+    5  |  Change Sensor RuleDB               
+    6  |  Change Sensor Comment              
+    7  |  Show Sensor Status                 
+    8  |  Change Sensor rulepath             
+    9  |  Write rules to rulepath            
+   99  |  Back To Main Menu                  
+Enter Item: 7
+*------------------------------------------*
+[i] Sensor       : TESTS
+[i] Engine Type  : suricata
+[i] RuleDB       : TESTDB
+[i] Write to path: /tmp/test2/
+[i] Created      : Thu Dec 30 08:33:19 2010
+[i] Last Modified: Thu Dec 30 08:33:41 2010
+[i] Last Written : Thu Jan  1 00:00:00 1970
+[i] Needs Update : Yes
+[i] Comment      : TEST
+
+ Current Sensor: TESTS
+ ***************  Edit Sensors **************
+  Item |  Description                        
+    1  |  Choose Sensor to edit              
+    2  |  Add Sensor                         
+    3  |  Change Sensor Name                 
+    4  |  Change Sensor Engine Type          
+    5  |  Change Sensor RuleDB               
+    6  |  Change Sensor Comment              
+    7  |  Show Sensor Status                 
+    8  |  Change Sensor rulepath             
+    9  |  Write rules to rulepath            
+   99  |  Back To Main Menu                  
+Enter Item: 99
+
+ ************ Configuration Meny ************
+  Item |  Description                        
+    1  |  Edit Rule DB                       
+    2  |  Edit Sensor                        
+   99  |  Exit                               
+Enter Item: 99
+[*] Finished main...
+$ perl polman.pl -i TESTS -o 1
+[*] Starting main...
+[*] Loading ruledb and configs...
+[*] Sensor: TESTS
+[*] RuleDB: TESTDB
+[*] Search term: 1
+[*] Search field: enabled
+[*] Found 12375 rule(s) matching search criterias...
+[**] [D] sid:100000103 [alert] (GPL GAMES Breed Game Server Denial of Service Empty UDP Packet)
+[**] [D] sid:100000104 [alert] (GPL GAMES Amp II 3D Game Server Denial of Service Empty UDP Packet)
+[**] [D] sid:100000139 [alert] (GPL WEB_SERVER WEB-IIS Remote IIS Server Name spoof attempt loopback IP)
+[**] [D] sid:100000149 [alert] (GPL EXPLOIT WEB-MISC Jboss % attempt)
+[**] [D] sid:100000158 [alert] (GPL VOIP SIP INVITE message flooding)
+...
+...
+...
+[**] [D] sid:983 [alert] (GPL EXPLOIT unicode directory traversal attempt)
+[**] [D] sid:987 [alert] (GPL EXPLOIT .htr access)
+[**] [D] sid:989 [alert] (GPL SCAN sensepost.exe command shell attempt)
+[**] [D] sid:993 [alert] (GPL WEB_SERVER iisadmin access)
+[**] [D] sid:994 [alert] (GPL WEB_SERVER /scripts/iisadmin/default.htm access)
+[*] Displayed 12375 rules...
+[i] Do you want to Disable all rules for sensor TESTS? (y/N)?: 
+[i] Do you want to Enable all rules for sensor TESTS? (y/N)?: y
+[*] Do you want to change rule action for this search (y/N)?: 
+[*] Rule action for search is: current
+[*] Enabled sid 2005351 [alert] (ET WEB_SPECIFIC_APPS vBSupport SQL Injection Attempt -- vBSupport.php DELETE)
+[*] Enabled sid 2406427 [alert] (ET RBN Known Russian Business Network IP UDP (214))
+[*] Enabled sid 2003442 [alert] (ET MALWARE Webbuying.net Spyware Installing)
+[*] Enabled sid 2010372 [alert] (ET SCAN Amap UDP Service Scan Detected)
+[*] Enabled sid 2005415 [alert] (ET WEB_SPECIFIC_APPS Joomla! SQL Injection Attempt -- menu.php UNION SELECT)
+[*] Enabled sid 2008521 [alert] (ET TROJAN Keylogger Infection Report via POST)
+...
+...
+...
+[*] Enabled sid 2010996 [alert] (ET WEB_SPECIFIC_APPS Joomla Component com_communitypolls controller Parameter Local File Inclusion Attempt)
+[*] Enabled sid 2007221 [alert] (ET WEB_SPECIFIC_APPS 8pixel.net simpleblog SQL Injection Attempt -- edit.asp id ASCII)
+[*] Enabled sid 2004692 [alert] (ET WEB_SPECIFIC_APPS Kubix SQL Injection Attempt -- index.php member_id DELETE)
+[*] Finished main...
+
+$ perl polman.pl -i TESTS -w
+[*] Starting main...
+[*] Loading ruledb and configs...
+[*] Sensor: TESTS
+[*] RuleDB: TESTDB
+[*] Sensor created            : Thu Dec 30 08:33:19 2010
+[*] Sensor last modified      : Thu Dec 30 08:46:11 2010
+[*] Rules last written        : Thu Dec 30 10:47:25 2010
+[*] RuleDB revision nr.       : 1
+[*] Writing rules to path     : /tmp/test2/
+[*] Processing gid 1 rules...
+[*] Moving old rulefiles in /tmp/test2/ too /tmp/test2//old/1293706087/
+[*] Writing rulefiles too directory: /tmp/test2/
+[*] Done updating rules for sensor TESTS
+[*] Finished main...
+
+$ perl polman.pl -i TESTS -s "Zeus"
+[*] Starting main...
+[*] Loading ruledb and configs...
+[*] Sensor: TESTS
+[*] RuleDB: TESTDB
+[*] Search term: Zeus
+[*] Search field: msg
+[*] Found 22 rule(s) matching search criterias...
+[**] [E] sid:2008100 [alert] (ET TROJAN PRG/wnspoem/Zeus InfoStealer Trojan Config Download)
+[**] [E] sid:2008661 [alert] (ET TROJAN Zbot/Zeus HTTP POST)
+[**] [E] sid:2008665 [alert] (ET TROJAN Zbot/Zeus or Related Infection Checkin)
+[**] [E] sid:2009175 [alert] (ET TROJAN Zbot/Zeus C&C Access)
+[**] [E] sid:2009212 [alert] (ET TROJAN Zbot/Zeus Dropper Infection - /check)
+[**] [E] sid:2009213 [alert] (ET TROJAN Zbot/Zeus Dropper Infection - /loads.php)
+[**] [D] sid:2010342 [alert] (ET DELETED NACHA/Zeus Phishing Executable Download Attempt)
+[**] [D] sid:2010348 [alert] (ET TROJAN - Possible Zeus/Perkesh (.bin) configuration download)
+[**] [E] sid:2010729 [alert] (ET CURRENT_EVENTS Zeus Bot / Zbot Checkin (/us01d/in.php))
+[**] [E] sid:2011121 [alert] (ET TROJAN Phoenix Exploit Kit Facebook phishing page payload could be ZeuS)
+[**] [E] sid:2011344 [alert] (ET CURRENT_EVENTS POST to /x48/x58/ Possible Zeus Version 3 Command and Control Server Traffic)
+[**] [E] sid:2011345 [alert] (ET CURRENT_EVENTS Possible Zeus Version 3 Infection Posting Banking HTTP Log to Command and Control Server)
+[**] [E] sid:2011588 [alert] (ET TROJAN Zeus Bot Request to CnC)
+[**] [D] sid:2011811 [alert] (ET DELETED ZeuS http client library detected)
+[**] [E] sid:2011816 [alert] (ET TROJAN Zeus POST Request to CnC)
+[**] [D] sid:2011817 [alert] (ET DELETED Zeus GET Request to CnC)
+[**] [D] sid:2011818 [alert] (ET DELETED Zeus http client library detected)
+[**] [E] sid:2011827 [alert] (ET TROJAN Xilcter/Zeus related malware dropper reporting in)
+[**] [E] sid:2011926 [alert] (ET TROJAN X-Tag Zeus Mitmo user agent)
+[**] [D] sid:2012081 [alert] (ET CURRENT_EVENTS Possible Bozvanovna Zeus Campaign Config File URL)
+[**] [D] sid:2012082 [alert] (ET CURRENT_EVENTS Possible Bozvanovna Zeus Campaign Binary File URL)
+[**] [E] sid:2012083 [alert] (ET CURRENT_EVENTS Possible Bozvanovna Zeus Campaign SSL Certificate)
+[i] Do you want to Disable all rules for sensor TESTS? (y/N)?: 
+[i] Do you want to Enable all rules for sensor TESTS? (y/N)?: y
+[*] Do you want to change rule action for this search (y/N)?: y
+[*] *default* will reset rule action to original source state.
+[*] *current* will keep current state or use *default* if it is the first time the rule is enabled.
+[*] Choose one of alert,log,pass,drop,reject,sdrop,default or current (default: current): drop
+[*] Rule action for search is: drop
+[*] Enabled sid 2009175 [drop] (ET TROJAN Zbot/Zeus C&C Access)
+[*] Enabled sid 2012082 [drop] (ET CURRENT_EVENTS Possible Bozvanovna Zeus Campaign Binary File URL)
+[*] Enabled sid 2011816 [drop] (ET TROJAN Zeus POST Request to CnC)
+[*] Enabled sid 2011588 [drop] (ET TROJAN Zeus Bot Request to CnC)
+[*] Enabled sid 2010729 [drop] (ET CURRENT_EVENTS Zeus Bot / Zbot Checkin (/us01d/in.php))
+[*] Enabled sid 2012083 [drop] (ET CURRENT_EVENTS Possible Bozvanovna Zeus Campaign SSL Certificate)
+[*] Enabled sid 2011121 [drop] (ET TROJAN Phoenix Exploit Kit Facebook phishing page payload could be ZeuS)
+[*] Enabled sid 2011827 [drop] (ET TROJAN Xilcter/Zeus related malware dropper reporting in)
+[*] Enabled sid 2009213 [drop] (ET TROJAN Zbot/Zeus Dropper Infection - /loads.php)
+[*] Enabled sid 2012081 [drop] (ET CURRENT_EVENTS Possible Bozvanovna Zeus Campaign Config File URL)
+[*] Enabled sid 2008661 [drop] (ET TROJAN Zbot/Zeus HTTP POST)
+[*] Enabled sid 2010348 [drop] (ET TROJAN - Possible Zeus/Perkesh (.bin) configuration download)
+[*] Enabled sid 2011926 [drop] (ET TROJAN X-Tag Zeus Mitmo user agent)
+[*] Enabled sid 2011811 [drop] (ET DELETED ZeuS http client library detected)
+[*] Enabled sid 2008100 [drop] (ET TROJAN PRG/wnspoem/Zeus InfoStealer Trojan Config Download)
+[*] Enabled sid 2011817 [drop] (ET DELETED Zeus GET Request to CnC)
+[*] Enabled sid 2010342 [drop] (ET DELETED NACHA/Zeus Phishing Executable Download Attempt)
+[*] Enabled sid 2011345 [drop] (ET CURRENT_EVENTS Possible Zeus Version 3 Infection Posting Banking HTTP Log to Command and Control Server)
+[*] Enabled sid 2009212 [drop] (ET TROJAN Zbot/Zeus Dropper Infection - /check)
+[*] Enabled sid 2011818 [drop] (ET DELETED Zeus http client library detected)
+[*] Enabled sid 2008665 [drop] (ET TROJAN Zbot/Zeus or Related Infection Checkin)
+[*] Enabled sid 2011344 [drop] (ET CURRENT_EVENTS POST to /x48/x58/ Possible Zeus Version 3 Command and Control Server Traffic)
+[*] Finished main...
+
+$ perl polman.pl -i TESTS -s "proftpd"
+[*] Starting main...
+[*] Loading ruledb and configs...
+[*] Sensor: TESTS
+[*] RuleDB: TESTDB
+[*] Search term: proftpd
+[*] Search field: msg
+[*] Found 3 rule(s) matching search criterias...
+[**] [E] sid:2003197 [alert] (ET EXPLOIT ProFTPD .message file overflow attempt)
+[**] [E] sid:2011992 [alert] (ET CURRENT_EVENTS Possible ProFTPD Backdoor Initiate Attempt)
+[**] [E] sid:2011994 [alert] (ET CURRENT_EVENTS ProFTPD Backdoor Inbound Backdoor Open Request (ACIDBITCHEZ))
+[i] Do you want to Disable all rules for sensor TESTS? (y/N)?: 
+[i] Do you want to Enable all rules for sensor TESTS? (y/N)?: 
+[i] Do you want to Enable/Disable rule by rule (y/N)?: y
+[*] Displaying enabled sid 2003197:
+alert tcp $EXTERNAL_NET any -> $HOME_NET 21 (msg:"ET EXPLOIT ProFTPD .message file overflow attempt"; flowbits:isset,BE.ftp.message; flow:to_server,established; content:"CWD "; depth:4; nocase; flowbits:unset,BE.ftp.message; classtype:misc-attack; reference:url,www.milw0rm.com/exploits/2856; reference:url,doc.emergingthreats.net/bin/view/Main/2003197; reference:url,www.emergingthreats.net/cgi-bin/cvsweb.cgi/sigs/EXPLOIT/EXPLOIT_ProFTPD; sid:2003197; rev:6;)
+[i] Do you want to Enable/Disable or Skip this rule (e/d/S)?: 
+[*] Skipping rule...
+[*] Displaying enabled sid 2011992:
+alert tcp $HOME_NET any -> 212.26.42.47 9090 (msg:"ET CURRENT_EVENTS Possible ProFTPD Backdoor Initiate Attempt"; flow:to_server; classtype: trojan-activity; reference:url,xorl.wordpress.com/2010/12/02/news-proftpd-owned-and-backdoored/; reference:url, sourceforge.net/mailarchive/message.php?msg_name=alpine.DEB.2.00.1012011542220.12930%40familiar.castaglia.org; reference:url,slashdot.org/story/10/12/02/131214/ProFTPDorg-Compromised-Backdoor-Distributed; sid:2011992; rev:2;)
+[i] Do you want to Enable/Disable or Skip this rule (e/d/S)?: 
+[*] Skipping rule...
+[*] Displaying enabled sid 2011994:
+alert tcp any any -> $HOME_NET 21 (msg:"ET CURRENT_EVENTS ProFTPD Backdoor Inbound Backdoor Open Request (ACIDBITCHEZ)"; flow:established,to_server; content:"HELP "; depth:5; content:"ACIDBITCHEZ"; distance:0; nocase; classtype:trojan-activity; reference:url,slashdot.org/story/10/12/02/131214/ProFTPDorg-Compromised-Backdoor-Distributed; reference:url,xorl.wordpress.com/2010/12/02/news-proftpd-owned-and-backdoored/; reference:url, sourceforge.net/mailarchive/message.php?msg_name=alpine.DEB.2.00.1012011542220.12930%40familiar.castaglia.org; sid:2011994; rev:4;)
+[i] Do you want to Enable/Disable or Skip this rule (e/d/S)?: e
+[*] Do you want to change rule action for this rule (y/N)?: y
+[*] *default* will reset rule action to original source state.
+[*] *current* will keep current state or use *default* if it is the first time the rule is enabled.
+[*] Choose one of alert,log,pass,drop,reject,sdrop,default or current (default: current): drop
+[*] Rule action for sid 2011994 is set to: drop
+[*] Enabled sid 2011994 [drop] (ET CURRENT_EVENTS ProFTPD Backdoor Inbound Backdoor Open Request (ACIDBITCHEZ))
+[*] Finished main...
+
+$ perl polman.pl -i TESTS -e 2003197
+[*] Starting main...
+[*] Loading ruledb and configs...
+[*] Sensor: TESTS
+[*] RuleDB: TESTDB
+[*] Enabled sid 2003197 [alert] (ET EXPLOIT ProFTPD .message file overflow attempt)
+[*] Finished main...
+
+$ perl polman.pl -i TESTS -d 2003197
+[*] Starting main...
+[*] Loading ruledb and configs...
+[*] Sensor: TESTS
+[*] RuleDB: TESTDB
+[*] Disabled sid 2003197 [alert] (ET EXPLOIT ProFTPD .message file overflow attempt)
+[*] Finished main...
+
+$ perl polman.pl -i TESTS -l 2011994
+[*] Starting main...
+[*] Loading ruledb and configs...
+[*] Sensor: TESTS
+[*] RuleDB: TESTDB
+[*] Displaying enabled sid 2011994:
+drop tcp any any -> $HOME_NET 21 (msg:"ET CURRENT_EVENTS ProFTPD Backdoor Inbound Backdoor Open Request (ACIDBITCHEZ)"; flow:established,to_server; content:"HELP "; depth:5; content:"ACIDBITCHEZ"; distance:0; nocase; classtype:trojan-activity; reference:url,slashdot.org/story/10/12/02/131214/ProFTPDorg-Compromised-Backdoor-Distributed; reference:url,xorl.wordpress.com/2010/12/02/news-proftpd-owned-and-backdoored/; reference:url, sourceforge.net/mailarchive/message.php?msg_name=alpine.DEB.2.00.1012011542220.12930%40familiar.castaglia.org; sid:2011994; rev:4;)
+[*] Finished main...
+
+$ perl polman.pl -i TESTS -w
+[*] Starting main...
+[*] Loading ruledb and configs...
+[*] Sensor: TESTS
+[*] RuleDB: TESTDB
+[*] Sensor created            : Thu Dec 30 08:33:19 2010
+[*] Sensor last modified      : Thu Dec 30 12:54:46 2010
+[*] Rules last written        : Thu Dec 30 12:54:16 2010
+[*] RuleDB revision nr.       : 1
+[*] Writing rules to path     : /tmp/rules2/
+[*] Processing gid 1 rules...
+[*] Moving old rulefiles in /tmp/rules2/ too /tmp/rules2//old/1293713693/
+[*] Writing rulefiles too directory: /tmp/rules2/
+[*] Done updating rules for sensor TESTS
+[*] Finished main...
+
+$ ls -alh /tmp/rules2/
+total 6.6M
+drwxr-xr-x 3 edward edward 4.0K 2010-12-30 12:54 .
+drwxrwxrwt 9 root   root   4.0K 2010-12-30 12:54 ..
+-rw-r--r-- 1 edward edward  40K 2010-12-30 12:54 emerging-activex.rules
+-rw-r--r-- 1 edward edward  22K 2010-12-30 12:54 emerging-attack_response.rules
+-rw-r--r-- 1 edward edward 127K 2010-12-30 12:54 emerging-botcc-BLOCK.rules
+-rw-r--r-- 1 edward edward 118K 2010-12-30 12:54 emerging-botcc.rules
+-rw-r--r-- 1 edward edward  17K 2010-12-30 12:54 emerging-chat.rules
+-rw-r--r-- 1 edward edward 395K 2010-12-30 12:54 emerging-compromised-BLOCK.rules
+-rw-r--r-- 1 edward edward 377K 2010-12-30 12:54 emerging-compromised.rules
+-rw-r--r-- 1 edward edward  60K 2010-12-30 12:54 emerging-current_events.rules
+-rw-r--r-- 1 edward edward 1.6K 2010-12-30 12:54 emerging-deleted.rules
+-rw-r--r-- 1 edward edward 5.1K 2010-12-30 12:54 emerging-dns.rules
+-rw-r--r-- 1 edward edward 8.9K 2010-12-30 12:54 emerging-dos.rules
+-rw-r--r-- 1 edward edward 8.3K 2010-12-30 12:54 emerging-drop-BLOCK.rules
+-rw-r--r-- 1 edward edward 7.8K 2010-12-30 12:54 emerging-drop.rules
+-rw-r--r-- 1 edward edward 1.2K 2010-12-30 12:54 emerging-dshield-BLOCK.rules
+-rw-r--r-- 1 edward edward 1.1K 2010-12-30 12:54 emerging-dshield.rules
+-rw-r--r-- 1 edward edward  91K 2010-12-30 12:54 emerging-exploit.rules
+-rw-r--r-- 1 edward edward  21K 2010-12-30 12:54 emerging-ftp.rules
+-rw-r--r-- 1 edward edward  27K 2010-12-30 12:54 emerging-games.rules
+-rw-r--r-- 1 edward edward 3.2K 2010-12-30 12:54 emerging-icmp_info.rules
+-rw-r--r-- 1 edward edward 1.1K 2010-12-30 12:54 emerging-icmp.rules
+-rw-r--r-- 1 edward edward 9.9K 2010-12-30 12:54 emerging-imap.rules
+-rw-r--r-- 1 edward edward  386 2010-12-30 12:54 emerging-inappropriate.rules
+-rw-r--r-- 1 edward edward 274K 2010-12-30 12:54 emerging-malware.rules
+-rw-r--r-- 1 edward edward 7.3K 2010-12-30 12:54 emerging-misc.rules
+-rw-r--r-- 1 edward edward 292K 2010-12-30 12:54 emerging-netbios.rules
+-rw-r--r-- 1 edward edward  43K 2010-12-30 12:54 emerging-p2p.rules
+-rw-r--r-- 1 edward edward  70K 2010-12-30 12:54 emerging-policy.rules
+-rw-r--r-- 1 edward edward 5.5K 2010-12-30 12:54 emerging-pop3.rules
+-rw-r--r-- 1 edward edward 334K 2010-12-30 12:54 emerging-rbn-BLOCK.rules
+-rw-r--r-- 1 edward edward 315K 2010-12-30 12:54 emerging-rbn.rules
+-rw-r--r-- 1 edward edward  39K 2010-12-30 12:54 emerging-rpc.rules
+-rw-r--r-- 1 edward edward 1.4K 2010-12-30 12:54 emerging-scada.rules
+-rw-r--r-- 1 edward edward  72K 2010-12-30 12:54 emerging-scan.rules
+-rw-r--r-- 1 edward edward 8.9K 2010-12-30 12:54 emerging-shellcode.rules
+-rw-r--r-- 1 edward edward 3.3K 2010-12-30 12:54 emerging-smtp.rules
+-rw-r--r-- 1 edward edward 7.6K 2010-12-30 12:54 emerging-snmp.rules
+-rw-r--r-- 1 edward edward 111K 2010-12-30 12:54 emerging-sql.rules
+-rw-r--r-- 1 edward edward 1.4K 2010-12-30 12:54 emerging-telnet.rules
+-rw-r--r-- 1 edward edward 3.0K 2010-12-30 12:54 emerging-tftp.rules
+-rw-r--r-- 1 edward edward  80K 2010-12-30 12:54 emerging-tor-BLOCK.rules
+-rw-r--r-- 1 edward edward  74K 2010-12-30 12:54 emerging-tor.rules
+-rw-r--r-- 1 edward edward 443K 2010-12-30 12:54 emerging-trojan.rules
+-rw-r--r-- 1 edward edward 196K 2010-12-30 12:54 emerging-user_agents.rules
+-rw-r--r-- 1 edward edward  12K 2010-12-30 12:54 emerging-virus.rules
+-rw-r--r-- 1 edward edward 5.3K 2010-12-30 12:54 emerging-voip.rules
+-rw-r--r-- 1 edward edward  38K 2010-12-30 12:54 emerging-web_client.rules
+-rw-r--r-- 1 edward edward  99K 2010-12-30 12:54 emerging-web_server.rules
+-rw-r--r-- 1 edward edward 2.7M 2010-12-30 12:54 emerging-web_specific_apps.rules
+-rw-r--r-- 1 edward edward 1.8K 2010-12-30 12:54 emerging-worm.rules
+drwxr-xr-x 3 edward edward 4.0K 2010-12-30 12:54 old
+
+
