@@ -258,7 +258,10 @@ sub edit_ruledb {
         show_menu_ruledb($RULEDB,$VERBOSE,$DEBUG);
         $RESP = <STDIN>;
         chomp $RESP;
-        if ( $RESP == 1 ) {
+        if ( $RESP eq "" ) {
+            print "[*] Not a valid entery!\n";
+        }
+        elsif ( $RESP == 1 ) {
             $RULEDB = choose_ruledb($RDBH,$VERBOSE,$DEBUG);
         }
         elsif ( $RESP == 2 ) {
@@ -289,7 +292,7 @@ sub edit_ruledb {
             $run = 1;
             return $RDBH;
         } else {
-            print "[*] $RESP is not a valid entery!\n"
+            print "[*] $RESP is not a valid entery!\n";
         }
     }
 }

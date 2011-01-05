@@ -223,7 +223,10 @@ sub edit_sensor {
         show_menu_sensor($SENSOR,$VERBOSE,$DEBUG);
         my $RESP = <STDIN>;
         chomp $RESP;
-        if ( $RESP == 1 ) {
+        if ( $RESP eq "") {
+            print "[*] Not a valid entery!\n";
+        }
+        elsif ( $RESP == 1 ) {
             $SENSOR = choose_sensor($SENSH,$VERBOSE,$DEBUG);
         }
         elsif ( $RESP == 2 ) {
@@ -254,7 +257,7 @@ sub edit_sensor {
             $run = 1;
             return $SENSH;
         } else {
-            print "[*] $RESP is not a valid entery!\n"
+            print "[*] $RESP is not a valid entery!\n";
         }
     }
 }

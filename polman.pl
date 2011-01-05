@@ -299,7 +299,10 @@ sub run_config {
         show_menu_main();
         my $RESP = <STDIN>;
         chomp $RESP;
-        if ( $RESP == 1 ) {
+        if ( $RESP eq "" ) {
+            print "[*] Not a valid entery!\n";
+        }
+        elsif ( $RESP == 1 ) {
             my ($RDBH) = init_statefile_ruledb();
             $RDBH = edit_ruledb($RDBH,$VERBOSE,$DEBUG);
             $RDB::RULEDB = $RDBH;
@@ -317,7 +320,7 @@ sub run_config {
             $run = 1;
             return;
         } else {
-            print "[*] $RESP is not a valid entery!\n"
+            print "[*] $RESP is not a valid entery!\n";
         }
     }
 }

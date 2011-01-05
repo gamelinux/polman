@@ -64,10 +64,10 @@ sub check_for_new_ruledb_sids {
         if ( not defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid} ) {
             my $action = $RDBH->{$RULEDB}->{1}->{$sid}->{'action'};
             if ( $RDBH->{$RULEDB}->{1}->{$sid}->{'enabled'} == 1) {
-                print "[*] Auto enabling new sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n";
+                print "[*] Auto enabling new sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if ($VERBOSE||$DEBUG);
                 $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} = 1;
             } else {
-                print "[*] Auto disabling new sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if $DEBUG;
+                print "[*] Auto disabling new sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if ($VERBOSE||$DEBUG);
                 $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} = 0;
             }
             $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'ADDED'} = time();
@@ -130,16 +130,16 @@ sub sensor_enable_sid {
             if (defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} &&
                       $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} == 1) {
                 # Allready enabled
-                print "[*] Already enabled sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n";
+                print "[*] Already enabled sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if ($VERBOSE||$DEBUG);
             } else {
                 $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} = 1;
                 $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'MODIFIED'} = time();
                 $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'COMMENT'} = $COMMENT;
                 $SENSH->{$SENSOR}->{'MODIFIED'} = time();
-                print "[*] Enabling sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n";
+                print "[*] Enabling sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if ($VERBOSE||$DEBUG);
             }
         } else {
-            print "[W] Sid $sid is not found in main rule DB, skipping!\n"; # could add, as it does not matter...
+            print "[W] Sid $sid is not found in main rule DB, skipping!\n" if $DEBUG; # could add, as it does not matter...
         }
     }
     return $SENSH;
@@ -158,7 +158,7 @@ sub sensor_disable_sid {
  
     if (not defined $RDBH ||
         not defined $RDBH->{$RULEDB} ) {
-        print "[E] RuleDB problems...\n";
+        print "[E] RuleDB problems...\n" if $DEBUG;
         return $SENSH;
     }
 
@@ -179,19 +179,19 @@ sub sensor_disable_sid {
             if (not defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'}) {
                 $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} = 0;
                 $action = $RDBH->{$RULEDB}->{1}->{$sid}->{'action'};
-                print "[*] Already disabled sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n";
+                print "[*] Already disabled sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if ($VERBOSE||$DEBUG);
             } elsif ($SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} == 1) {
                 $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} = 0;
                 $SENSH->{$SENSOR}->{'MODIFIED'} = time();
                 $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'COMMENT'} = $COMMENT;
-                print "[*] Disabling sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n";
+                print "[*] Disabling sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if ($VERBOSE||$DEBUG);
             } elsif ($SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} == 0) {
                 # Allready disabled
-                print "[*] Already disabled sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n";
+                print "[*] Already disabled sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if ($VERBOSE||$DEBUG);
             } else {
                 $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} = 0;
                 $action = $RDBH->{$RULEDB}->{1}->{$sid}->{'action'};
-                print "[*] Already disabled sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n";
+                print "[*] Already disabled sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if ($VERBOSE||$DEBUG);
             }
         } else {
             $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'ADDED'} = time();
@@ -200,7 +200,7 @@ sub sensor_disable_sid {
             $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'COMMENT'} = $COMMENT;
             $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'action'} = $RDBH->{$RULEDB}->{1}->{$sid}->{'action'};
             my $action = $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'action'};
-            print "[*] Already disabled sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n";
+            print "[*] Already disabled sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if ($VERBOSE||$DEBUG);
         }
     }
     return $SENSH;
@@ -241,7 +241,7 @@ sub get_rule {
           . "$RDBH->{$RULEDB}->{1}->{$sid}->{'dst_ip'} $RDBH->{$RULEDB}->{1}->{$sid}->{'dst_port'} "
           . "($RDBH->{$RULEDB}->{1}->{$sid}->{'options'})";
 
-    print "$rule\n" if $DEBUG;
+    print "RAW RULE:\n$rule\n" if $DEBUG;
     return $rule;
 }
 
