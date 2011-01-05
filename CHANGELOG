@@ -1,0 +1,18 @@
+Polman Changelog
+
+v0.3.1 Features
+ * Enable/disable multiple rules on cmdline
+ * Download rules from the intertubs (vrt/et)
+
+v0.3.0 No globals
+ * Removed the globals, passing variables to subs
+
+v0.2.0 Moduled
+ * Throwed subs into modules
+ * Problems with passing globals, need to refactor
+
+
+v0.1.0 PoC
+ * First working release
+   - all code is in one file though - dont like that
+

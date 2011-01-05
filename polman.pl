@@ -38,7 +38,7 @@ polman - Advanced Policy Manager for IPS/IDS Sensors
 
 =head1 VERSION
 
-0.3
+0.3.1
 
 =head1 SYNOPSIS
 
