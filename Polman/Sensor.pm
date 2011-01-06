@@ -73,11 +73,11 @@ my $COMMENT;
 sub is_defined_sensor {
    my ($SENSOR,$SENSH,$RDBH,$VERBOSE,$DEBUG) = @_;
    if (not defined $SENSH ) {
-       print "[E] You need to add a sensor first!\n" if ($DEBUG||$VERBOSE);
+       print "[E] You need to add a sensor first!\n";
        return 0;
    }
    if (not defined $SENSH->{$SENSOR}) {
-       print "[E] Sensor $SENSOR does not exist!\n" if ($DEBUG||$VERBOSE);
+       print "[E] Sensor $SENSOR does not exist!\n";
        return 0;
    }
    if (not defined $SENSH->{$SENSOR}->{'RULEDB'} ) {
@@ -482,7 +482,7 @@ sub update_sensor_rules {
     }
 
     # Check flowbits
-    print "[*] Checking flowbit dependencies and enabling needed rules...\n";
+    print "[*] Searching for flowbit dependencies...\n";
     my $flowsids = {};
     # I see a potential problem here:
     # Example, sid 2002924 sets a flowbit, but it also depends on flowbits
@@ -492,9 +492,12 @@ sub update_sensor_rules {
     # be enabled, but thats not good enough... This could be recursive also...
     # A while loop might do the trick, but leaving it for now as it is...
     my $FLOWBITS = search_rules_flowbits_isset_isnotset($SENSOR,$SENSH,$RULEDB,$RDBH,$VERBOSE,$DEBUG);
+    print "[*] Searching for needed flowbit rules...\n";
     $flowsids = search_rules_flowbits_set($SENSOR,$SENSH,$RULEDB,$RDBH,$FLOWBITS,$VERBOSE,$DEBUG);
+    print "[*] Enabling dependent flowbit rules...\n";
     foreach my $fsid (keys %$flowsids) {
         next if not defined $fsid;
+        # Could also pass $fsids as a string "1234,4567,7890"
         $SENSH = sensor_enable_sid($fsid,$SENSOR,$SENSH,$RDBH,$RULEDB,"current",$VERBOSE,$DEBUG);
     }
     # A hack would be to run it twice! Uncomment the next lines if you want to :)
@@ -523,12 +526,13 @@ sub update_sensor_rules {
                 my $catagory = $RDBH->{$RULEDB}->{1}->{$sid}->{'rulegroup'};
                 $CAT->{$catagory}->{$sid} = 1;
            } else {
-                print "[E] Sensor has sid $sid, but its lacking from main rule DB :(\n";
+                print "[E] Sensor has sid $sid, but its lacking from main rule DB :(\n" if ($VERBOSE||$DEBUG);
            }
         }
         # write out foreach $sid in $catagory to $WFILE/$catagory
         foreach my $rg (keys %$CAT) {
             my $sids = $CAT->{$rg};
+            print "[*] Writing gid 1 rules to $WFILE/$rg.rules file.\n";
             open (RULEFILE, ">$WFILE/$rg.rules");
             foreach my $sid (keys %$sids) {
                 my $rule = get_rule($SENSOR,$SENSH,$RULEDB,$RDBH,$sid,$VERBOSE,$DEBUG);
@@ -545,11 +549,11 @@ sub update_sensor_rules {
                 next if not defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid};
                 next if not defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'};
                 next if $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} == 0;
-                print "[*] Writing sid:$sid with gid 1 to rules file.\n" if $DEBUG;
+                print "[*] Writing sid:$sid with gid 1 to rules file.\n" if ($VERBOSE||$DEBUG);
                 my $rule = get_rule($SENSOR,$SENSH,$RULEDB,$RDBH,$sid,$VERBOSE,$DEBUG);
                 print RULEFILE "$rule\n";
             } else {
-                print "[E] Sensors has sid $sid, but its lacking from main rule DB :(\n";
+                print "[E] Sensors has sid $sid, but its lacking from main rule DB :(\n" if ($VERBOSE||$DEBUG);
             }
         }
         close (RULEFILE);

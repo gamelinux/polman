@@ -29,8 +29,8 @@ use Polman::Sensor qw/:all/;
 use Polman::Search qw/:all/;
 use Polman::Parser qw/:all/;
 
-my $DEBUG             = 0;
-my $VERBOSE           = 0;
+my $DEBUG             = undef;
+my $VERBOSE           = undef;
 
 =head1 NAME
 
@@ -58,7 +58,7 @@ polman - Advanced Policy Manager for IPS/IDS Sensors
  -s <msg>            : Search rules in field msg
  -u                  : Updates ruledb from its specified dirs
  -w <file>           : Write out all enabled rules for a sensor to <file>
- -v|--verbose        : Enables verbose output
+ -v|--verbose        : Verbose output
  --debug             : Enables debug output
 
  EXAMPLES:
@@ -85,7 +85,7 @@ my ($SEARCH_C, $SEARCH_CAT, $SEARCH_P, $SEARCH_M, $SEARCH_ENABLED, $WFILE) = und
 # commandline overrides config & defaults
 Getopt::Long::GetOptions(
     'debug'                  => \$DEBUG,
-    'verbose|v'              => \$VERBOSE,
+    'verbose|v=s'            => \$VERBOSE,
     'status'                 => \$STATUS,
     'configure'              => \$SETUP,
     'c=s'                    => \$SEARCH_C,
@@ -108,7 +108,7 @@ $SIG{"QUIT"}  = sub { gameover("QUIT") };
 $SIG{"KILL"}  = sub { gameover("KILL") };
 
 # Main
-print "[*] Starting main...\n";
+print "[*] Starting main...\n" if ($VERBOSE||$DEBUG);
 
 if ( defined $UPDATE ) {
    update_ruledb($RULEDB,$VERBOSE,$DEBUG);
@@ -119,7 +119,7 @@ elsif ( defined $STATUS ) {
 elsif ( defined $SETUP) {
    run_config($VERBOSE,$DEBUG);
 }
-elsif ( defined $SEARCH_C || defined $SEARCH_M | defined $SEARCH_P ) {
+elsif ( defined $SEARCH_C || defined $SEARCH_M || defined $SEARCH_P ) {
    my ($RDBH) = init_statefile_ruledb();
    my ($SENSH) = init_statefile_sensordb();
    if (is_defined_sensor($SENSOR,$SENSH,$RDBH,$VERBOSE,$DEBUG) == 1) {
@@ -156,7 +156,7 @@ elsif ( $ESID ) {
        my $RULEDB = $SENSH->{$SENSOR}->{'RULEDB'};
        if (is_defined_ruledb($RULEDB,$RDBH,$VERBOSE,$DEBUG) == 1) {
            my $ACTION = "current";
-           $SENSH = sensor_enable_sid($ESID,$SENSOR,$SENSH,$RDBH,$RULEDB,$ACTION,$VERBOSE,$DEBUG);
+           $SENSH = sensor_enable_sid($ESID,$SENSOR,$SENSH,$RDBH,$RULEDB,$ACTION,$VERBOSE,(not defined $VERBOSE) ? 1 : $DEBUG);
        }
    }
 }
@@ -166,7 +166,7 @@ elsif ( $DSID ) {
    if (is_defined_sensor($SENSOR,$SENSH,$RDBH,$VERBOSE,$DEBUG) == 1) {
        my $RULEDB = $SENSH->{$SENSOR}->{'RULEDB'};
        if (is_defined_ruledb($RULEDB,$RDBH,$VERBOSE,$DEBUG) == 1) {
-           $SENSH = sensor_disable_sid($DSID,$SENSOR,$SENSH,$RDBH,$RULEDB,$VERBOSE,$DEBUG);
+           $SENSH = sensor_disable_sid($DSID,$SENSOR,$SENSH,$RDBH,$RULEDB,$VERBOSE,(not defined $VERBOSE) ? 1 : $DEBUG);
        }
    }
 }
@@ -194,7 +194,7 @@ elsif ( $UPDATESENS ) {
    print "[*] Nothing to do here... try with '-h'\n";
 }
 
-print "[*] Finished main...\n";
+print "[*] Finished main...\n" if ($VERBOSE||$DEBUG);
 exit;
 
 =head1 FUNCTIONS
@@ -206,7 +206,7 @@ exit;
 =cut
 
 sub init_statefile_ruledb {
-    print "[*] Loading ruledb...\n";
+    print "[*] Loading ruledb...\n" if ($VERBOSE||$DEBUG);;
     use Polman::State RDB  => '/var/lib/polman/pm-rule.db';
     return ($RDB::RULEDB);
 }
@@ -218,7 +218,7 @@ sub init_statefile_ruledb {
 =cut
 
 sub init_statefile_sensordb {
-    print "[*] Loading sensordb...\n";
+    print "[*] Loading sensordb...\n" if ($VERBOSE||$DEBUG);;
     use Polman::State SENS => '/var/lib/polman/pm-sensor.db';
     return ($SENS::SENSORS);
 }

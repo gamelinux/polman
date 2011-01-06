@@ -67,10 +67,10 @@ our $DEBUG;
 sub is_defined_ruledb {
    my ($RULEDB,$RDBH,$VERBOSE,$DEBUG) = @_;
    if (not defined $RDBH) {
-       print "[E] You need to add a RuleDB first!\n" if ($DEBUG||$VERBOSE);
+       print "[E] You need to add a RuleDB first!\n";
        return 0;
    } elsif (not defined $RDBH->{$RULEDB}) {
-       print "[E] RuleDB $RULEDB does not exist!\n" if ($DEBUG||$VERBOSE);
+       print "[E] RuleDB $RULEDB does not exist!\n";
        return 0;
    } elsif (not defined $RDBH->{$RULEDB}->{'RULESDIR'}) {
        print "[E] RuleDB is missing RULESDIR entry!\n";
@@ -178,7 +178,7 @@ sub choose_ruledb {
         print "    $count  |  $RDBN                   \n";
     }
     if ( $count == 0) {
-        print "[E] No RuleDBs are defined!\n" if ($VERBOSE||$DEBUG);
+        print "[E] No RuleDBs are defined!\n";
         return undef;
     }
     my $RESP = qq();

@@ -204,7 +204,7 @@ sub search_rules_flowbits_isset_isnotset {
             while ( $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} =~ /flowbits:\s?(is(not)?|un)set,\s?([\w.]*)\s?;/g ) {
             #if ( $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} =~ /flowbits:\s?(is(not)?|un)set,\s?([\w.]*)\s?;/ ) {
                 my $fb = $3;
-                print "[D] Got flowbit $1set: $fb\n" if $DEBUG;
+                print "[D] Got flowbit $1set: $fb\n" if ($VERBOSE||$DEBUG);
                 push (@$FLOWBITS, $fb);
             }
         }
@@ -225,15 +225,14 @@ sub search_rules_flowbits_set {
     my $retrules = {};
     return $retrules if (!@$FLOWBITS);
 
-    my $rules = $RDBH->{$RULEDB}->{1};
+    my $rules = $RDBH->{$RULEDB}->{1}; # I dont want to copy this....
     foreach my $sid (keys %$rules ) {
         next if (not defined $sid || $sid eq '');
         foreach my $flowbit (@$FLOWBITS) {
             next if (not defined $flowbit);
-            #while ( $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} =~ /flowbits:\s?set,\s?$flowbit\s?;/ ) {
             if ( $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} =~ /flowbits:\s?set,\s?$flowbit\s?;/ ) {
-                $retrules->{$sid} = $RDBH->{$RULEDB}->{1}->{$sid};
-                print "[*] Sid $sid sets flowbit $flowbit: " . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . "\n" if $DEBUG;
+                $retrules->{$sid} = 1;
+                print "[*] Sid $sid sets flowbit $flowbit: " . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . "\n" if ($VERBOSE||$DEBUG);
             }
         }
     }
@@ -313,8 +312,8 @@ sub proccess_list_of_rules {
                 elsif ( $RESP eq "sdrop" )  {$ACTION = "sdrop"}
                 elsif ( $RESP eq "default" ){$ACTION = "default"}
                 else { $ACTION = "current" }
+                print "[*] Rule action for search is: $ACTION\n";
             }
-            print "[*] Rule action for search is: $ACTION\n";
 
             foreach my $ESID (keys %$rules) {
                 $SENSH = sensor_enable_sid($ESID,$SENSOR,$SENSH,$RDBH,$RULEDB,$ACTION,$VERBOSE,$DEBUG);
@@ -382,8 +381,8 @@ sub search_rules_maindb {
     my $rules = $RDBH->{$RULEDB}->{1};
     my ($msg, $class, $meta, $cata) = qq();
 
-    print "[*] Search term: $search\n";
-    print "[*] Search field: $field\n";
+    print "[*] Search term: $search\n" if ($VERBOSE||$DEBUG);
+    print "[*] Search field: $field\n" if ($VERBOSE||$DEBUG);
 
     foreach my $sid (keys %$rules ) {
         next if (not defined $sid);

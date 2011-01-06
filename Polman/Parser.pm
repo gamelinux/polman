@@ -70,7 +70,7 @@ sub parse_all_rule_files {
 
     # Open the directory
     print "[*] Looking for rulefiles in $RULESDIR\n";
-    if( opendir( DIR, $RULESDIR ) ) {
+    if( opendir( DIR, "$RULESDIR/" ) ) {
        # Find rule files in dir (*.rules)
        while( my $FILE = readdir( DIR ) ) {
           next if( ( "." eq $FILE ) || ( ".." eq $FILE ) );
@@ -84,7 +84,7 @@ sub parse_all_rule_files {
         #exit 1;
     }
     foreach my $FILE ( @FILES ) {
-       $NRULEDB = get_rules ("$RULESDIR$FILE",$NRULEDB,$VERBOSE);
+       $NRULEDB = get_rules ("$RULESDIR/$FILE",$NRULEDB,$VERBOSE);
        if ( $NRULEDB->{1}->{0}->{'OK'} == 0 ) {
           warn "[*] Couldn't parse $RULESDIR$FILE: $!\n";
        }
@@ -102,7 +102,7 @@ sub delete_all_rulefiles {
     my ($RULESDIR,$VERBOSE) = @_;
     my @FILES;
     # Open the directory
-    if( opendir( DIR, $RULESDIR ) ) {
+    if( opendir( DIR, "$RULESDIR/" ) ) {
        # Find rule files in dir (*.rules)
        while( my $FILE = readdir( DIR ) ) {
           next if( ( "." eq $FILE ) || ( ".." eq $FILE ) );
