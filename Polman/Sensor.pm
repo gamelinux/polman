@@ -31,20 +31,20 @@ use vars qw (@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 @EXPORT = qw ( is_defined_sensor show_menu_sensor add_sensor
                show_sensor_status edit_sensor choose_sensor
                set_sensor_comment set_sensor_ruledb set_sensor_name
-               set_sensor_engine_type 
+               set_sensor_sidmsgmap set_sensor_engine_type 
                update_sensor_rules);
 
 @EXPORT_OK = qw (is_defined_sensor show_menu_sensor add_sensor
                show_sensor_status edit_sensor choose_sensor
                set_sensor_comment set_sensor_ruledb set_sensor_name
-               set_sensor_engine_type 
+               set_sensor_sidmsgmap set_sensor_engine_type 
                update_sensor_rules);
 
 %EXPORT_TAGS = (all => [@EXPORT_OK]); # Import :all to get everything.
 
 #my $RULEDB;
 #my $SENSOR;
-my $COMMENT;
+#my $COMMENT;
 #my $WFILE;
 #my $VERBOSE;
 
@@ -97,6 +97,10 @@ sub is_defined_sensor {
        print "[E] The sensor $SENSOR has a undefined Rulespath\n";
        return 0;
    }
+   if (not defined $SENSH->{$SENSOR}->{'SIDMSGMAP'} ) {
+       print "[E] The sensor $SENSOR has a undefined sid-msg.map path\n";
+       return 0;
+   }
    if (not defined $SENSH->{$SENSOR}->{'CREATED'}) {
        print "[E] The sensor $SENSOR has a undefined creation time\n";
        return 0;
@@ -124,7 +128,8 @@ sub show_menu_sensor {
     print "    6  |  Change Sensor Comment              \n";
     print "    7  |  Show Sensor Status                 \n";
     print "    8  |  Change Sensor rulepath             \n";
-    print "    9  |  Write rules to rulepath            \n";
+    print "    9  |  Change Sensor sid-msg.map path     \n";
+    print "   10  |  Write rules to rulepath            \n";
     print "   99  |  Back To Main Menu                  \n";
     print "Enter Item: ";
 }
@@ -150,6 +155,7 @@ sub add_sensor {
         $SENSH = set_sensor_engine_type($SENSOR,$SENSH,$VERBOSE,$DEBUG);
         $SENSH = set_sensor_ruledb($SENSOR,$SENSH,$RDBH,$VERBOSE,$DEBUG);
         $SENSH = set_sensor_write($SENSOR,$SENSH,$VERBOSE,$DEBUG);
+        $SENSH = set_sensor_sidmsgmap($SENSOR,$SENSH,$VERBOSE,$DEBUG);
         print "[*] You can now add rules to sensor $SENSOR\n";
         return ($SENSOR,$SENSH);
     } else {
@@ -170,29 +176,35 @@ sub show_sensor_status {
      my $ER = count_enabled_rules($SENSOR,$SENSH,$VERBOSE,$DEBUG);
 
      print "*------------------------------------------*\n";
-     print "[i] Sensor       : $SENSOR\n";
+     print "[i] Sensor              : $SENSOR\n";
      my $ENGINE = $SENSH->{$SENSOR}->{'ENGINE'};
-     print "[i] Engine Type  : $ENGINE\n";
+     print "[i] Engine Type         : $ENGINE\n";
      my $RULEDB = $SENSH->{$SENSOR}->{'RULEDB'};
-     print "[i] RuleDB       : $RULEDB\n";
-     my $RPATH = $SENSH->{$SENSOR}->{'RULESPATH'};
-     # my $DEST = is_dir_or_file($RFILE); # $DEST is "dir " or "file"
-     print "[i] Write to path: $RPATH\n";
+     print "[i] RuleDB              : $RULEDB\n";
+     if (defined $SENSH->{$SENSOR}->{'RULESPATH'}) {
+         my $RPATH = $SENSH->{$SENSOR}->{'RULESPATH'};
+         print "[i] Write rules to path : $RPATH\n";
+     }
+     if (defined $SENSH->{$SENSOR}->{'SIDMSGMAP'}) {
+         my $SPATH = $SENSH->{$SENSOR}->{'SIDMSGMAP'};
+         write "[i] Write sid-msg.map to: $SPATH\n"
+     }
      my $CT=localtime($SENSH->{$SENSOR}->{'CREATED'});
      my $MT=localtime($SENSH->{$SENSOR}->{'MODIFIED'});
      my $WT=localtime($SENSH->{$SENSOR}->{'WRITTEN'});
-     print "[i] Created      : $CT\n";
-     print "[i] Last Modified: $MT\n";
-     print "[i] Last Written : $WT\n";
-     print "[i] Enabled rules: $ER\n";
+     print "[i] Created             : $CT\n";
+     print "[i] Last Modified       : $MT\n";
+     print "[i] Last Written        : $WT\n";
+     print "[i] Enabled rules       : $ER\n";
      my $RDBT = $SENSH->{$SENSOR}->{'RULEDB'};
+     $RDBH->{$RDBT}->{'UPDATED'} = 0 if not defined $RDBH->{$RDBT}->{'UPDATED'};
      if ( $SENSH->{$SENSOR}->{'WRITTEN'} < $RDBH->{$RDBT}->{'UPDATED'} ) {
-         print "[i] Needs Update : Yes\n";
+         print "[i] Needs Update        : Yes\n";
      } else {
-         print "[i] Needs Update : No\n";
+         print "[i] Needs Update        : No\n";
      }
      my $COMMENT = $SENSH->{$SENSOR}->{'COMMENT'};
-     print "[i] Comment      : $COMMENT\n";
+     print "[i] Comment             : $COMMENT\n";
 }
 
 =head2 edit_sensor
@@ -223,7 +235,7 @@ sub edit_sensor {
         show_menu_sensor($SENSOR,$VERBOSE,$DEBUG);
         my $RESP = <STDIN>;
         chomp $RESP;
-        if ( $RESP eq "") {
+        if ( $RESP eq "" || not $RESP =~ /\d+/) {
             print "[*] Not a valid entery!\n";
         }
         elsif ( $RESP == 1 ) {
@@ -251,6 +263,9 @@ sub edit_sensor {
              $SENSH = set_sensor_write($SENSOR,$SENSH,$VERBOSE,$DEBUG);
         }
         elsif ( $RESP == 9 ) {
+             $SENSH = set_sensor_sidmsgmap($SENSOR,$SENSH,$VERBOSE,$DEBUG);
+        }
+        elsif ( $RESP == 10 ) {
              $SENSH = update_sensor_rules($SENSOR,$SENSH,$RDBH,$VERBOSE,$DEBUG);
         }
         elsif ( $RESP == 99 ) {
@@ -309,7 +324,7 @@ sub set_sensor_comment {
     print "[*] Please add comment: ";
     my $RESP = <STDIN>;
     chomp $RESP;
-    $RESP = $COMMENT if ($RESP eq "");
+    $RESP = "No comment set!" if ($RESP eq "");
     $SENSH->{$SENSOR}->{'COMMENT'} = $RESP;
     $SENSH->{$SENSOR}->{'MODIFIED'} = time();
     return $SENSH;
@@ -415,7 +430,7 @@ sub set_sensor_engine_type {
 
 =head2 set_sensor_write
 
- Sets dir or file to write rule too...
+ Sets dir or file to write rules too...
 
 =cut
 
@@ -423,11 +438,29 @@ sub set_sensor_write {
     my ($SENSOR,$SENSH,$VERBOSE,$DEBUG) = @_;
 
     print "[*] If a dir is specified, rules will be written to multiple files.\n";
-    print "[*] Enter file or dir to write rule to: ";
+    print "[*] Enter file or dir to write rules too: ";
     my $PATH = <STDIN>;
     chomp $PATH;
     #$PATH =~ s/ /_/g;
     $SENSH->{$SENSOR}->{'RULESPATH'} = $PATH;
+    $SENSH->{$SENSOR}->{'MODIFIED'} = time();
+    return $SENSH;
+}
+
+=head2 set_sensor_sidmsgmap
+
+ Sets dir to write sid-msg.map file too...
+
+=cut
+
+sub set_sensor_sidmsgmap {
+    my ($SENSOR,$SENSH,$VERBOSE,$DEBUG) = @_;
+
+    print "[*] Enter path to write sid-msg.map file too: ";
+    my $PATH = <STDIN>;
+    chomp $PATH;
+    #$PATH =~ s/ /_/g;
+    $SENSH->{$SENSOR}->{'SIDMSGMAP'} = $PATH;
     $SENSH->{$SENSOR}->{'MODIFIED'} = time();
     return $SENSH;
 }
@@ -482,8 +515,9 @@ sub update_sensor_rules {
     }
 
     # Check flowbits
-    print "[*] Searching for flowbit dependencies...\n";
     my $flowsids = {};
+    my $FLOWBITS = [];
+    print "[*] Searching for flowbit dependencies";
     # I see a potential problem here:
     # Example, sid 2002924 sets a flowbit, but it also depends on flowbits
     # so we might be in a situation that we search_rules_flowbits_isset_isnotset
@@ -491,9 +525,11 @@ sub update_sensor_rules {
     # rules that 2002924 depends on etc. Next time you run update, they will
     # be enabled, but thats not good enough... This could be recursive also...
     # A while loop might do the trick, but leaving it for now as it is...
-    my $FLOWBITS = search_rules_flowbits_isset_isnotset($SENSOR,$SENSH,$RULEDB,$RDBH,$VERBOSE,$DEBUG);
-    print "[*] Searching for needed flowbit rules...\n";
+    $FLOWBITS = search_rules_flowbits_isset_isnotset($SENSOR,$SENSH,$RULEDB,$RDBH,$VERBOSE,$DEBUG);
+    print "\n";
+    print "[*] Searching for needed flowbit rules";
     $flowsids = search_rules_flowbits_set($SENSOR,$SENSH,$RULEDB,$RDBH,$FLOWBITS,$VERBOSE,$DEBUG);
+    print "\n";
     print "[*] Enabling dependent flowbit rules...\n";
     foreach my $fsid (keys %$flowsids) {
         next if not defined $fsid;
@@ -514,7 +550,7 @@ sub update_sensor_rules {
     if ( -d $WFILE ) {
         # We have a directory
         # Move old files too "trash"
-        delete_all_rulefiles($WFILE);
+        delete_all_rulefiles($WFILE,$VERBOSE,$DEBUG);
         # split up rules into different files.
         # split rules into $hash->$catagory->$sid
         print "[*] Writing rulefiles too directory: $WFILE\n";
@@ -534,7 +570,7 @@ sub update_sensor_rules {
             my $sids = $CAT->{$rg};
             print "[*] Writing gid 1 rules to $WFILE/$rg.rules file.\n";
             open (RULEFILE, ">$WFILE/$rg.rules");
-            foreach my $sid (keys %$sids) {
+            foreach my $sid (sort (keys %$sids)) {
                 my $rule = get_rule($SENSOR,$SENSH,$RULEDB,$RDBH,$sid,$VERBOSE,$DEBUG);
                 print RULEFILE "$rule\n";
             }
@@ -544,7 +580,7 @@ sub update_sensor_rules {
         # Must be a file then :)
         print "[*] Writing to rulefile: $WFILE\n";
         open (RULEFILE, ">$WFILE");
-        foreach my $sid (keys %$SENSORRULES) {
+        foreach my $sid (sort (keys %$SENSORRULES)) {
             if ( defined $RDBH->{$RULEDB}->{1}->{$sid} ) {
                 next if not defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid};
                 next if not defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'};
@@ -562,6 +598,26 @@ sub update_sensor_rules {
     $SENSH->{$SENSOR}->{'WRITTEN'} = time();
     $SENSH->{$SENSOR}->{'REVISION'} = $RDBH->{$RULEDB}->{'REVISION'};
     print "[*] Done updating rules for sensor $SENSOR\n";
+    # Make sid-msg.map file
+    if ( defined $SENSH->{$SENSOR}->{'SIDMSGMAP'} ) {
+        my $sid_msg = qq();
+        my $PATH = $SENSH->{$SENSOR}->{'SIDMSGMAP'};
+        my $WFILE = "$PATH/sid-msg.map";
+        if (!open (SIDMSGMAP, ">$WFILE")) {
+            print "[E] Can't open $WFILE : $!\n" if ($VERBOSE||$DEBUG);
+            print "[*] Skipping sid-msg.map creation...\n" if ($VERBOSE||$DEBUG);
+        } else {
+            print "[*] Writing sid-msg.map file: $WFILE\n";
+            foreach my $sid (sort {$a <=> $b} (keys %$SENSORRULES)) {
+                $sid_msg = get_sid_msg_map($RULEDB,$RDBH,$sid,$VERBOSE,$DEBUG);
+                print SIDMSGMAP "$sid_msg\n";
+            }
+            close (SIDMSGMAP);
+            print "[*] Done writing sid-msg.map...\n";
+        }
+    } else {
+        print "[*] No sid-msg.map file defined for $SENSOR\n. Skipping...";
+    }
     return $SENSH;
 }
 

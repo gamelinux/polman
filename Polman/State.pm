@@ -68,8 +68,13 @@ END {
     my $file;
     use vars qw($entry @entry %entry);
     
+    # Setting Ident to 0 saves about 10% of space...
+    # but saves everything on one line or something...
     local $Data::Dumper::Indent   = 1;
-    local $Data::Dumper::Sortkeys = 1;
+    # Setting Sortkeys to 1, sorts the keys.. Nice for
+    # small stuff, crap for performance when you have
+    # lots of elements in the hashes etc.
+    local $Data::Dumper::Sortkeys = 0;
 
     return if $^C;	# just compile checking
     return if $?;	# return if the program died.
@@ -79,7 +84,8 @@ END {
 
 	next unless $namespace{$ns}{write};
 
-	unlink "$file.old";
+	unlink "$file.old.1";
+        rename "$file.old", "$file.old.1";
 	rename "$file", "$file.old";
 	eval {
 	    no strict 'refs';

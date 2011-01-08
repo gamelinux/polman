@@ -108,6 +108,7 @@ $SIG{"QUIT"}  = sub { gameover("QUIT") };
 $SIG{"KILL"}  = sub { gameover("KILL") };
 
 # Main
+$| = 1; # flush stdout
 print "[*] Starting main...\n" if ($VERBOSE||$DEBUG);
 
 if ( defined $UPDATE ) {
@@ -206,8 +207,9 @@ exit;
 =cut
 
 sub init_statefile_ruledb {
-    print "[*] Loading ruledb...\n" if ($VERBOSE||$DEBUG);;
+    print "[*] Loading ruledb...\n" if ($VERBOSE||$DEBUG);
     use Polman::State RDB  => '/var/lib/polman/pm-rule.db';
+    #use Polman::State RDB  => ['/var/lib/polman/pm-rule.db', readonly => 1 ];
     return ($RDB::RULEDB);
 }
 
@@ -218,8 +220,9 @@ sub init_statefile_ruledb {
 =cut
 
 sub init_statefile_sensordb {
-    print "[*] Loading sensordb...\n" if ($VERBOSE||$DEBUG);;
+    print "[*] Loading sensordb...\n" if ($VERBOSE||$DEBUG);
     use Polman::State SENS => '/var/lib/polman/pm-sensor.db';
+    #use Polman::State SENS => ['/var/lib/polman/pm-sensor.db', readonly => 1];
     return ($SENS::SENSORS);
 }
 

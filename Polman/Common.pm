@@ -25,10 +25,10 @@ use vars qw (@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 @ISA = qw (Exporter);
 
 @EXPORT = qw (check_for_new_ruledb_sids sensor_enable_sid sensor_disable_sid 
-              count_enabled_rules get_rule count_hash);
+              count_enabled_rules get_rule get_sid_msg_map count_hash);
 
 @EXPORT_OK = qw (check_for_new_ruledb_sids sensor_enable_sid sensor_disable_sid 
-                 count_enabled_rules get_rule count_hash);
+                 count_enabled_rules get_rule get_sid_msg_map count_hash);
 
 %EXPORT_TAGS = (all => [@EXPORT_OK]); # Import :all to get everything.
 
@@ -222,8 +222,8 @@ sub get_rule {
     if (not defined $RULEDB) {
         $RULEDB = $SENSH->{$SENSOR}->{'RULEDB'};
     }
-    return if not defined $RDBH->{$RULEDB};
-    return if not defined $RDBH->{$RULEDB}->{1}->{$sid};
+    return $rule if not defined $RDBH->{$RULEDB};
+    return $rule if not defined $RDBH->{$RULEDB}->{1}->{$sid};
 
     if ( defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'action'} ) {
         if ( $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'action'} eq "" ) {
@@ -243,6 +243,44 @@ sub get_rule {
 
     print "RAW RULE:\n$rule\n" if $DEBUG;
     return $rule;
+}
+
+=head2 get_sid_msg_map
+
+ Give it a $sid, $SENSOR and a $RULEDB,
+ and it will return you the sid-gen.map entery for 
+
+=cut
+
+sub get_sid_msg_map {
+    my ($RULEDB,$RDBH,$sid,$VERBOSE,$DEBUG) = @_;
+    my $smm = qq(ERROR);
+
+    return $smm if not defined $RDBH->{$RULEDB};
+    return $smm if not defined $RDBH->{$RULEDB}->{1}->{$sid};
+
+    if ( defined $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} ) {
+        my $msg = $RDBH->{$RULEDB}->{1}->{$sid}->{'name'};
+        $smm = "$sid || $msg"
+    } else {
+        return $smm;
+    }
+
+    my $opt = $RDBH->{$RULEDB}->{1}->{$sid}->{'options'};
+    my @OPTS = split( /;(\t|\s)?/, $opt ) if $opt;
+    foreach my $OPT ( reverse (@OPTS) ) {
+         my ( $key, $arg ) = split( /:/, $OPT ) if $OPT;
+         if ( defined $key && defined $arg ) {
+             if ( $key =~ /reference/ ) {
+                 $smm = "$smm || $arg";
+             }
+         }
+    }
+    #while ( $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'options'} =~ /reference:\s?([\S.]*)\s?;/g ) {
+    #    $smm = "$smm || $1"
+    #}
+    print "$smm\n" if ($DEBUG && $VERBOSE); # Yes both...
+    return $smm
 }
 
 =head2 count_enabled_rules

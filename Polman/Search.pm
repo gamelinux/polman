@@ -196,11 +196,19 @@ sub search_rules_flowbits_isset_isnotset {
     my $FLOWBITS = [];
     my $FLOWBITS_UNIQ = [];
     my $SENSORRULES = $SENSH->{$SENSOR}->{1}->{'RULES'};
+    my $count = 0;
 
     foreach my $sid (keys %$SENSORRULES) {
+        $count ++;
+        if ( $count == 5000 ) {
+            print "." if not defined ($DEBUG||$VERBOSE) ;
+            $count = 0;
+        }
         if ( defined $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} ) {
-            next if not defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'};
-            next if $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} == 0;
+            #next if not defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'};
+            next if not defined $SENSORRULES->{$sid}{'enabled'};
+            #next if $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} == 0;
+            next if $SENSORRULES->{$sid}{'enabled'} == 0;
             while ( $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} =~ /flowbits:\s?(is(not)?|un)set,\s?([\w.]*)\s?;/g ) {
             #if ( $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} =~ /flowbits:\s?(is(not)?|un)set,\s?([\w.]*)\s?;/ ) {
                 my $fb = $3;
@@ -211,6 +219,9 @@ sub search_rules_flowbits_isset_isnotset {
     }
     my %seen = ();
     @$FLOWBITS_UNIQ = grep { ! $seen{ $_ }++ } @$FLOWBITS;
+    print "[D] Found " if ($VERBOSE||$DEBUG);
+    print scalar(@$FLOWBITS_UNIQ) if ($VERBOSE||$DEBUG);
+    print " unique flowbits...\n" if ($VERBOSE||$DEBUG);
     return $FLOWBITS_UNIQ;
 }
 
@@ -223,16 +234,24 @@ sub search_rules_flowbits_isset_isnotset {
 sub search_rules_flowbits_set {
     my ($SENSOR,$SENSH,$RULEDB,$RDBH,$FLOWBITS,$VERBOSE,$DEBUG) = @_;
     my $retrules = {};
+    my $count = 0;
     return $retrules if (!@$FLOWBITS);
 
-    my $rules = $RDBH->{$RULEDB}->{1}; # I dont want to copy this....
+    my $rules = $RDBH->{$RULEDB}->{1};
     foreach my $sid (keys %$rules ) {
         next if (not defined $sid || $sid eq '');
+        $count ++;
+        if ( $count == 3737 ) {
+            print "." if not defined ($DEBUG||$VERBOSE) ;
+            $count = 0;
+        }
         foreach my $flowbit (@$FLOWBITS) {
             next if (not defined $flowbit);
-            if ( $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} =~ /flowbits:\s?set,\s?$flowbit\s?;/ ) {
+            #if ( $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} =~ /flowbits:\s?set,\s?$flowbit\s?;/ ) {
+            if ( $rules->{$sid}{'options'} =~ /flowbits:\s?set,\s?$flowbit\s?;/ ) {
                 $retrules->{$sid} = 1;
-                print "[*] Sid $sid sets flowbit $flowbit: " . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . "\n" if ($VERBOSE||$DEBUG);
+                #print "[*] Sid $sid sets flowbit $flowbit: " . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . "\n" if ($VERBOSE||$DEBUG);
+                print "[*] Sid $sid sets flowbit $flowbit: " . $rules->{$sid}{'name'} . "\n" if ($VERBOSE||$DEBUG);
             }
         }
     }

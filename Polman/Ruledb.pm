@@ -38,9 +38,6 @@ use vars qw (@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 %EXPORT_TAGS = (all => [@EXPORT_OK]); # Import :all to get everything.
 
-our $RULEDB;
-our $VERBOSE;
-our $DEBUG;
 =head1 NAME 
 
  Polman::Ruledb - Subs for manipulating Polmans RuleDBs
@@ -435,7 +432,7 @@ sub load_rulefiles_into_db {
 
     my $RULESDIR = $RDBH->{$RULEDB}->{'RULESDIR'};
     print "[*] Updating ruledb: $RULEDB\n";
-    my $NRULEDB = parse_all_rule_files($RULESDIR,$VERBOSE);
+    my $NRULEDB = parse_all_rule_files($RULESDIR,$VERBOSE,$DEBUG);
     if (defined $NRULEDB->{1}->{0}) {
         print "[*] Total rules loaded: " . $NRULEDB->{1}->{0}->{'COUNT'} . "\n";
     } else {

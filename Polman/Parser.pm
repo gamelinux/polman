@@ -31,12 +31,6 @@ use vars qw (@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 %EXPORT_TAGS = (all => [@EXPORT_OK]); # Import :all to get everything.
 
-my $RULEDB;
-my $SENSOR;
-my $RULESDIR;
-my $NRULEDB;
-my $DEBUG;
-
 =head1 NAME 
 
  Polman::Parser - Subs for manipulating rule files
@@ -60,7 +54,7 @@ my $DEBUG;
 =cut
 
 sub parse_all_rule_files {
-    my ($RULESDIR,$VERBOSE) = @_;
+    my ($RULESDIR,$VERBOSE,$DEBUG) = @_;
     my @FILES;
     my $NRULEDB = {};
 
@@ -84,7 +78,7 @@ sub parse_all_rule_files {
         #exit 1;
     }
     foreach my $FILE ( @FILES ) {
-       $NRULEDB = get_rules ("$RULESDIR/$FILE",$NRULEDB,$VERBOSE);
+       $NRULEDB = get_rules ("$RULESDIR/$FILE",$NRULEDB,$VERBOSE,$DEBUG);
        if ( $NRULEDB->{1}->{0}->{'OK'} == 0 ) {
           warn "[*] Couldn't parse $RULESDIR$FILE: $!\n";
        }
@@ -99,7 +93,7 @@ sub parse_all_rule_files {
 =cut
 
 sub delete_all_rulefiles {
-    my ($RULESDIR,$VERBOSE) = @_;
+    my ($RULESDIR,$VERBOSE,$DEBUG) = @_;
     my @FILES;
     # Open the directory
     if( opendir( DIR, "$RULESDIR/" ) ) {
@@ -136,7 +130,7 @@ sub delete_all_rulefiles {
 =cut
 
 sub get_rules {
-    my ($RFILE,$NRULEDB,$VERBOSE) = @_;
+    my ($RFILE,$NRULEDB,$VERBOSE,$DEBUG) = @_;
     $NRULEDB->{1}->{0}->{'OK'} = 0;
 
     if (open (FILE, $RFILE)) {
