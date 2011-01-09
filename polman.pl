@@ -55,6 +55,7 @@ polman - Advanced Policy Manager for IPS/IDS Sensors
  -m <catagory>       : Search rules by catagory
  -o <1/0>            : Search rules by enabled(1) or disabled(0)
  -r <ruledb>         : RuleDB too work on
+ -p <metadata>       : Search rules by metadata
  -s <msg>            : Search rules in field msg
  -u                  : Updates ruledb from its specified dirs
  -w <file>           : Write out all enabled rules for a sensor to <file>

@@ -1,29 +1,25 @@
-
 # Version 0.3
 x* add default output file or dir for when writing sensor rules
 x* check if sensor needs updates against ruledb updated
 x* Output in status how many active rules for a sensor.
 x* write active rules for a sensor to "its original" filenames
-
 x* enable all default enabled rules in ruledb
-  (should then be easy to disable all policy.rules etc.)
-
--* When RuleDB is updated, there should be a way to say
+   (should then be easy to disable all policy.rules etc.)
+x* When RuleDB is updated, there should be a way to say
    that all new rules that are default enabled, should be
    default turned ON or not. (add it sensor menu)
    [*] Apply "new default enbaled rules" to ruleset
- * We might do a cmdline "search" so we can look for new rules
-   in ruledb, and process them in a batch or rule by rule...
-
 x* FlowBit tracking and automagically enable if needed
-
 x* Through stuff out in .pm's
-
-# 0.4
-
 x* Add modified time to all rules (rev nr changes)
    - So one can easy see what rules changes when....
- * Generate sid-msg.map for sensor rules (or ruledb?)
+x* Generate sid-msg.map for sensor rules (or ruledb?)
+
+
+# 0.4
+ * If not exists, mkdir /var/lib/polman/
+ * We might do a cmdline "search" so we can look for new rules
+   in ruledb, and process them in a batch or rule by rule...
  * download rules from web (also via proxys) 
 
 # X.X
