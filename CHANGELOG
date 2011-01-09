@@ -3,6 +3,8 @@ Polman Changelog
 v0.3.2
 FEATURES:
  * Download rules from the intertubes (vrt/et)
+ * Delete RuleDBs and Sensors
+ * Copy a Sensor
 BUGS:
  * None
 
