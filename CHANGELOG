@@ -1,8 +1,33 @@
 Polman Changelog
 
-v0.3.1 Features
+v0.3.2
+FEATURES:
+ * Download rules from the intertubes (vrt/et)
+BUGS:
+ * None
+
+v0.3.1
+FEATURES:
  * Enable/disable multiple rules on cmdline
- * Download rules from the intertubs (vrt/et)
+ * Generates sid-msg.map
+ * Automatic enables missing flowbit rules
+ * Rules can be written to one file or splitt up
+   into multiple (original named) files.
+ * First write turns ON _all_ rules that are default
+   enabled by vendor (VRT/ET/ETPRO), if one has not
+   set a specific state for the rule(s) before.
+   Rules that are default disabled, continues disabled,
+   but will be turned on if they set a flowbit that
+   some rules depend on.
+ * When a ruledb has been updated, and you write out
+   new rule file(s) for a sensor, new rules will be
+   applied to the sensor in their default state that
+   the vendor shipped them in.
+ * Tuned Verboseness/Debug
+
+BUGS:
+ * Fixed some menu errors when entry was not a digit
+ * Fix bug on counting enabled rules for a sensor
 
 v0.3.0 No globals
  * Removed the globals, passing variables to subs
