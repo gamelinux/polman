@@ -187,7 +187,7 @@ sub show_sensor_status {
      }
      if (defined $SENSH->{$SENSOR}->{'SIDMSGMAP'}) {
          my $SPATH = $SENSH->{$SENSOR}->{'SIDMSGMAP'};
-         write "[i] Write sid-msg.map to: $SPATH\n"
+         print "[i] Write sid-msg.map to: $SPATH\n"
      }
      my $CT=localtime($SENSH->{$SENSOR}->{'CREATED'});
      my $MT=localtime($SENSH->{$SENSOR}->{'MODIFIED'});
