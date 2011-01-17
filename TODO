@@ -22,6 +22,16 @@ x* Generate sid-msg.map for sensor rules (or ruledb?)
    in ruledb, and process them in a batch or rule by rule...
  * download rules from web (also via proxys) 
 
+# 0.5
+ * Make subs for processing searches by services/port - Johannes Lavre
+   - This is needed for the PRADS integration in the future also
+   - Example: alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS
+     - Limit search to rules that have defined ports: HTTP_PORTS
+     - Limit search to rules that have defined protocol: http (suricata)
+     - Make a regex searchfield for: "alert http $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS"
+       - They are all ready split into fields, so this should be easy :)
+   - Search in vrt metadata for service keyword (http/ssh/smtp....)
+
 # X.X
  * Enhance the backend
  * Optimize, fast and as low as possible on memmory usage.
