@@ -21,6 +21,10 @@ x* Generate sid-msg.map for sensor rules (or ruledb?)
  * We might do a cmdline "search" so we can look for new rules
    in ruledb, and process them in a batch or rule by rule...
  * download rules from web (also via proxys) 
+ * When writing out rules, check that "flowbits:set," rules
+   that has "flowbits:noalert" are used by other rules, if
+   not, give the admin/user a dialog to enable/disable/skip.
+ * Make so that you can search for CVE-xxxx-xxx (enable/disable)
 
 # 0.5
  * Make subs for processing searches by services/port - Johannes Lavre
@@ -33,7 +37,7 @@ x* Generate sid-msg.map for sensor rules (or ruledb?)
    - Search in vrt metadata for service keyword (http/ssh/smtp....)
 
 # X.X
- * Enhance the backend
+ * Enhance the backend - NoSQL ? MongoDB ?
  * Optimize, fast and as low as possible on memmory usage.
 -* Saved searches for Enable/Disable rules. That are performed
    when updating sensor<->ruledb ?
