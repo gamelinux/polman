@@ -69,8 +69,8 @@ sub is_defined_ruledb {
    } elsif (not defined $RDBH->{$RULEDB}) {
        print "[E] RuleDB $RULEDB does not exist!\n";
        return 0;
-   } elsif (not defined $RDBH->{$RULEDB}->{'RULESDIR'}) {
-       print "[E] RuleDB is missing RULESDIR entry!\n";
+   } elsif (not defined $RDBH->{$RULEDB}->{'RULESDIRS'}) {
+       print "[E] RuleDB is missing RULESDIRS entry!\n";
        return 0;
    } elsif (not defined $RDBH->{$RULEDB}->{'REVISION'}) {
        print "[E] RuleDB is missing REVISION entry!\n";
