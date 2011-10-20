@@ -19,8 +19,7 @@
 
 use strict;
 package Polman::Search;
-use Polman::Common qw/sensor_enable_sid sensor_disable_sid get_rule/;
-#use Polman::Ruledb qw/:all/;
+use Polman::Common qw/sensor_enable_sid sensor_disable_sid get_rule check_for_new_ruledb_sids/;
 use Exporter;
 use vars qw (@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -28,21 +27,15 @@ use vars qw (@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 @EXPORT = qw (search_rules search_rules_cat search_rules_enabled
               proccess_list_of_rules search_rules_maindb print_rule
-              search_rules_flowbits_isset_isnotset search_rules_flowbits_set);
+              search_rules_flowbits_isset_isnotset search_rules_flowbits_set
+              search_rules_flow search_new_rules);
 
 @EXPORT_OK = qw (search_rules search_rules_cat search_rules_enabled
                 proccess_list_of_rules search_rules_maindb print_rule
-                search_rules_flowbits_isset_isnotset search_rules_flowbits_set);
+                search_rules_flowbits_isset_isnotset search_rules_flowbits_set
+                search_rules_flow search_new_rules);
 
 %EXPORT_TAGS = (all => [@EXPORT_OK]); # Import :all to get everything.
-
-#my $RULEDB;
-#my $SENSOR;
-#my $SEARCH_C;
-#my $SEARCH_P;
-#my $SEARCH_M;
-#my $SEARCH_CAT;
-#my $DEBUG;
 
 =head1 NAME 
 
@@ -66,6 +59,7 @@ use vars qw (@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 =cut
 
+# Redo this to include _ALL_ searches one day in a more elegant fasion!
 sub search_rules {
     my ($SENSOR,$SENSH,$RULEDB,$RDBH,$SEARCH_C,$SEARCH_M,$SEARCH_P,$VERBOSE,$DEBUG) = @_;
     # Searchs can be complex:
@@ -149,6 +143,32 @@ sub search_rules {
     return $SENSH;
 }
 
+=head2 search_new_rules
+
+ Searches for rules in ruledb which are not in the sensor rules
+
+=cut
+
+sub search_new_rules {
+    my ($SENSOR,$SENSH,$RULEDB,$RDBH,$AUTO,$VERBOSE,$DEBUG) = @_;
+
+    my $SRDB = {};
+    my $rules = $RDBH->{$RULEDB}->{1};
+
+    if ($AUTO == 1) {
+        # autoenable in default state
+        $SENSH = check_for_new_ruledb_sids ($SENSOR,$SENSH,$RULEDB,$RDBH,"default",$VERBOSE,$DEBUG);
+    } else {
+        foreach my $sid (keys %$rules) {
+            if ( not defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid} ) {
+                $SRDB->{$sid} = $RDBH->{$RULEDB}->{1}->{$sid};
+            } # Skip old rules
+        }  
+        $SENSH = proccess_list_of_rules($SENSOR,$SENSH,$RULEDB,$RDBH,$SRDB,$VERBOSE,$DEBUG);
+    }
+    return $SENSH;
+}
+
 =head2 search_rules_cat
 
  Searches for rules in specific catagorty
@@ -162,6 +182,24 @@ sub search_rules_cat {
     # Populate search results
     if (defined $SEARCH_CAT) {
         $SRDB = search_rules_maindb($RDBH,$RULEDB,$SEARCH_CAT,"catagory",$VERBOSE,$DEBUG);
+        $SENSH = proccess_list_of_rules($SENSOR,$SENSH,$RULEDB,$RDBH,$SRDB,$VERBOSE,$DEBUG);
+    }
+    return $SENSH;
+}
+
+=head2 search_rules_flow
+
+ Searches for rules that has a specific flowbits option
+
+=cut
+
+sub search_rules_flow {
+    my ($SENSOR,$SENSH,$RULEDB,$RDBH,$SEARCH_F,$VERBOSE,$DEBUG) = @_;
+    my $SRDB = {};
+
+    # Populate search results
+    if (defined $SEARCH_F) {
+        $SRDB = search_rules_maindb($RDBH,$RULEDB,$SEARCH_F,"flowbits",$VERBOSE,$DEBUG);
         $SENSH = proccess_list_of_rules($SENSOR,$SENSH,$RULEDB,$RDBH,$SRDB,$VERBOSE,$DEBUG);
     }
     return $SENSH;
@@ -398,7 +436,7 @@ sub search_rules_maindb {
     return $retrules if not defined $RULEDB;
     return $retrules if not defined $RDBH->{$RULEDB};
     my $rules = $RDBH->{$RULEDB}->{1};
-    my ($msg, $class, $meta, $cata) = qq();
+    my ($msg, $class, $meta, $cata, $flowbit) = qq();
 
     print "[*] Search term: $search\n" if ($VERBOSE||$DEBUG);
     print "[*] Search field: $field\n" if ($VERBOSE||$DEBUG);
@@ -408,30 +446,40 @@ sub search_rules_maindb {
         if ( defined $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} ) {
             if ( $field eq "msg" && $RDBH->{$RULEDB}->{1}->{$sid}->{'options'}  =~ /msg:\s*\"(.*?)\"\s*;/ ) {
                 $msg = $1;
-                if ( $msg =~ /$search/i) {
+                if ($msg =~ /$search/i) {
                     $retrules->{$sid} = $RDBH->{$RULEDB}->{1}->{$sid};
                     print "[*] Sid $sid matches: " . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . "\n" if $DEBUG;
                 }
             }
             elsif ( $field eq "classtype" && $RDBH->{$RULEDB}->{1}->{$sid}->{'options'}  =~ /classtype:\s*(.*?)\s*;/ ) {
                 $class = $1;
-                if ( $class =~ /$search/) {
+                if ($class =~ /$search/) {
                     $retrules->{$sid} = $RDBH->{$RULEDB}->{1}->{$sid};
                     print "[*] Sid $sid matches: " . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . "\n" if $DEBUG;
                 }
             }
             elsif ( $field eq "metadata" && $RDBH->{$RULEDB}->{1}->{$sid}->{'options'}  =~ /metadata:\s*(.*?)\s*;/ ) {
                 $meta = $1;
-                if ( $meta =~ /$search/i) {
+                if ($meta =~ /$search/i) {
                     $retrules->{$sid} = $RDBH->{$RULEDB}->{1}->{$sid};
                     print "[*] Sid $sid matches: " . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . "\n" if $DEBUG;
                 }
             }
             elsif ( $field eq "catagory" && defined $RDBH->{$RULEDB}->{1}->{$sid}->{'rulegroup'} ) {
                 $cata = $RDBH->{$RULEDB}->{1}->{$sid}->{'rulegroup'};
-                if ( $cata =~ /$search/i) {
+                if ($cata =~ /$search/i) {
                     $retrules->{$sid} = $RDBH->{$RULEDB}->{1}->{$sid};
                     print "[*] Sid $sid matches: " . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . "\n" if $DEBUG;
+                }
+            }
+            #elsif ( $field eq "flowbits" && $RDBH->{$RULEDB}->{1}->{$sid}->{'options'}  =~ /flowbits:\s*(.*?)\s*;/ ) {
+            elsif ( $field eq "flowbits" && $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} ) {
+                while ( $RDBH->{$RULEDB}->{1}->{$sid}->{'options'} =~ /flowbits:\s?(is(not)?|un)?set\s?,\s?([\w.]*)\s?;/g ) {
+                    $flowbit = $3;
+                    if ($flowbit =~ /$search/i) {
+                        $retrules->{$sid} = $RDBH->{$RULEDB}->{1}->{$sid};
+                        print "[*] Sid $sid matches: " . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . "\n" if $DEBUG;
+                    }
                 }
             }
             elsif ( $field eq "enabled" && defined $RDBH->{$RULEDB}->{1}->{$sid}->{'enabled'} ) {

@@ -215,8 +215,13 @@ sub show_ruledb_status {
     print "[i] RuleDB       : $RULEDB\n";
     my $ENGINE = $RDBH->{$RULEDB}->{'ENGINE'};
     print "[i] Engine Type  : $ENGINE\n";
-    my $RDIR = $RDBH->{$RULEDB}->{'RULESDIR'};
-    print "[i] Rules Dir    : $RDIR\n";
+
+    my $RDIRS = $RDBH->{$RULEDB}->{'RULESDIRS'};
+    foreach my $RDIRN ( %$RDIRS ) {
+        next if not $RDIRN =~ /\d+/;
+        my $RDIR = $RDIRS->{$RDIRN};
+        print "[i] Rules Dir    : $RDIR\n";
+    }
     my $CT=localtime($RDBH->{$RULEDB}->{'CREATED'});
     my $MT=localtime($RDBH->{$RULEDB}->{'MODIFIED'});
     print "[i] Created      : $CT\n";
@@ -255,7 +260,7 @@ sub edit_ruledb {
         show_menu_ruledb($RULEDB,$VERBOSE,$DEBUG);
         $RESP = <STDIN>;
         chomp $RESP;
-        if ( $RESP eq "" ) {
+        if ( $RESP eq "" or not $RESP =~ /^\d+$/ ) {
             print "[*] Not a valid entery!\n";
         }
         elsif ( $RESP == 1 ) {
@@ -304,14 +309,75 @@ sub edit_ruledb {
 
 sub set_ruledb_rules_dir {
     my ($RULEDB,$RDBH,$VERBOSE,$DEBUG) = @_;
-    my $RESP = qq();
+show_ruledb_rules_dirs($RULEDB,$RDBH,$VERBOSE,$DEBUG);
+#    my $RESP = qq();
+#
+#    print "[*] Please specify the path to load rules from: ";
+#    $RESP = <STDIN>;
+#    chomp $RESP;
+#    #$RESP = qq(/tmp/rules/) if ($RESP eq "");
+#    $RDBH->{$RULEDB}->{'RULESDIR'} = $RESP;
+#    $RDBH->{$RULEDB}->{'MODIFIED'} = time();
+}
 
-    print "[*] Please specify the path to load rules from: ";
+# specify dirs to load rules from
+# could then have a module for downloading rules and
+# extracting them into a dir...
+
+sub show_ruledb_rules_dirs {
+    my ($RULEDB,$RDBH,$VERBOSE,$DEBUG) = @_;
+    my $count = 0;
+
+    print "\n";
+    print " ********* Listing Rule Dirs **********\n";
+    print "  item |  RuleDB Dir                     \n";
+    my $RDBRDS = $RDBH->{$RULEDB}->{'RULESDIRS'};
+    foreach my $RDBRD ( keys %$RDBRDS ) {
+        next if $RDBRD eq "";
+        $count ++;
+        my $RULEDIR = $RDBRDS->{$RDBRD};
+        print "    $RDBRD  |  $RULEDIR                 \n";
+    }
+    print "\n";
+    if ( $count == 0) {
+        print "[*] No Rule Directories are defined!\n\n";
+    }
+    print "[*] Enter an item Nr# if you want to edit it.\n" if $count != 0;
+    print "[*] Enter \'a\' if you want to add a directory.\n";
+    print "[*] Enter \'d <item>\' if you want to delete an item.\n" if $count != 0;
+    my $RESP = qq();
+    print "Enter item/command: ";
     $RESP = <STDIN>;
     chomp $RESP;
-    #$RESP = qq(/tmp/rules/) if ($RESP eq "");
-    $RDBH->{$RULEDB}->{'RULESDIR'} = $RESP;
-    $RDBH->{$RULEDB}->{'MODIFIED'} = time();
+    if ( $RESP =~ /^\d+$/ ) {
+        if ( not defined $RDBRDS->{$RESP} ) {
+            print "[*] Invalid item nr#, not defined in rulesdirs...\n";
+        } else {
+            print "[*] Please specify a path to load rules from: ";
+            my $PATH = <STDIN>;
+            chomp $PATH;
+            $RDBH->{$RULEDB}->{'RULESDIRS'}->{$RESP} = $PATH;
+            $RDBH->{$RULEDB}->{'MODIFIED'} = time();
+        }
+    } elsif ( $RESP =~ /^[aA]$/) {
+        $count ++;
+        while ( defined $RDBRDS->{$count} ) {
+            $count ++;
+        }
+        print "[*] Please specify a path to load rules from: ";
+        my $PATH = <STDIN>;
+        chomp $PATH;
+        $RDBH->{$RULEDB}->{'RULESDIRS'}->{$count} = $PATH;
+        $RDBH->{$RULEDB}->{'MODIFIED'} = time();
+    } elsif ( $RESP =~ /^[dD] (\d+)$/) {
+        my $item = $1;
+        if (defined $RDBRDS->{$item}) {
+            delete $RDBRDS->{$item};
+            $RDBH->{$RULEDB}->{'MODIFIED'} = time();
+        } else {
+            print "[*] Item $item not found!\n";
+        }
+    }
 }
 
 =head2 set_ruledb_comment
@@ -429,15 +495,21 @@ sub set_ruledb_engine_type {
 
 sub load_rulefiles_into_db {
     my ($RULEDB,$RDBH,$VERBOSE,$DEBUG) = @_;
-
-    my $RULESDIR = $RDBH->{$RULEDB}->{'RULESDIR'};
     print "[*] Updating ruledb: $RULEDB\n";
-    my $NRULEDB = parse_all_rule_files($RULESDIR,$VERBOSE,$DEBUG);
+
+    my $RULESDIRS = $RDBH->{$RULEDB}->{'RULESDIRS'};
+    my $NRULEDB = {};
+    foreach my $RDBS ( %$RULESDIRS ) {
+        next if not $RDBS =~ /\d+/;
+        next if not defined $RULESDIRS->{$RDBS};
+        my $RULESDIR = $RULESDIRS->{$RDBS};
+        $NRULEDB = parse_all_rule_files($RULESDIR,$NRULEDB,$VERBOSE,$DEBUG);
+    }
     if (defined $NRULEDB->{1}->{0}) {
         print "[*] Total rules loaded: " . $NRULEDB->{1}->{0}->{'COUNT'} . "\n";
     } else {
         print "[E] Could not load any rules, and thats a no go!\n";
-        print "[E] Check your path: $RULESDIR\n";
+        print "[E] Check your rules path(s)!\n";
         return $RDBH;
     }
 

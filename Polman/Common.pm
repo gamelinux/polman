@@ -56,26 +56,34 @@ use vars qw (@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 =cut
 
 sub check_for_new_ruledb_sids {
-    my ($SENSOR,$SENSH,$RDBH,$RULEDB,$ACTION,$VERBOSE,$DEBUG) = @_;
+    my ($SENSOR,$SENSH,$RULEDB,$RDBH,$ACTION,$VERBOSE,$DEBUG) = @_;
     my $rules = $RDBH->{$RULEDB}->{1};
-    my $COMMENT = "Rule auto enabled";
+    my $COMMENT_E = "Rule auto enabled";
+    my $COMMENT_D = "Rule auto disabled";
+    my $count_e = 0;
+    my $count_d = 0;
 
     foreach my $sid (keys %$rules) {
         if ( not defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid} ) {
             my $action = $RDBH->{$RULEDB}->{1}->{$sid}->{'action'};
             if ( $RDBH->{$RULEDB}->{1}->{$sid}->{'enabled'} == 1) {
+                $count_e++;
                 print "[*] Auto enabling new sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if ($VERBOSE||$DEBUG);
                 $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} = 1;
+                $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'COMMENT'} = $COMMENT_E;
             } else {
+                $count_d++;
                 print "[*] Auto disabling new sid $sid [$action] (" . $RDBH->{$RULEDB}->{1}->{$sid}->{'name'} . ")\n" if ($VERBOSE||$DEBUG);
                 $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} = 0;
+                $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'COMMENT'} = $COMMENT_D;
             }
             $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'ADDED'} = time();
             $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'MODIFIED'} = time();
-            $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'COMMENT'} = $COMMENT;
             $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'action'} = $action;
         } # else is a "old" rule
     }
+    print "[*] Auto enabled rules : $count_e\n";
+    print "[*] Auto disabled rules: $count_d\n";
     return $SENSH;
 }
 

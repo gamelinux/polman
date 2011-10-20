@@ -48,11 +48,14 @@ polman - Advanced Policy Manager for IPS/IDS Sensors
 
  --configure         : Enters the configuration menu
  -c <classtype>      : Search rules in field classtype
+ -f <flowbit>        : Search rules in field flowbits
  -d <sid>            : Disable rule with sid <sid>
  -e <sid>            : Enable rule with sid <sid>
  -i <sensor>         : Sensor too work on
  -l <sid>            : Display rule with sid <sid>
  -m <catagory>       : Search rules by catagory
+ -n                  : Search for new rules that are not added to the sensor
+ -a                  : Auto enable new rules in its default state
  -o <1/0>            : Search rules by enabled(1) or disabled(0)
  -r <ruledb>         : RuleDB too work on
  -p <metadata>       : Search rules by metadata
@@ -80,8 +83,8 @@ polman - Advanced Policy Manager for IPS/IDS Sensors
 my $RULEDB            = qq();
 my $SENSOR            = qq();
 
-my ($DSID, $ESID, $LSID, $UPDATE, $UPDATESENS, $STATUS, $SETUP) = 0;
-my ($SEARCH_C, $SEARCH_CAT, $SEARCH_P, $SEARCH_M, $SEARCH_ENABLED, $WFILE) = undef;
+my ($AUTO, $DSID, $ESID, $LSID, $UPDATE, $UPDATESENS, $STATUS, $SETUP) = 0;
+my ($SEARCH_C, $SEARCH_F, $SEARCH_CAT, $SEARCH_P, $SEARCH_M, $SEARCH_NEW, $SEARCH_ENABLED, $WFILE) = undef;
 
 # commandline overrides config & defaults
 Getopt::Long::GetOptions(
@@ -90,11 +93,14 @@ Getopt::Long::GetOptions(
     'status'                 => \$STATUS,
     'configure'              => \$SETUP,
     'c=s'                    => \$SEARCH_C,
+    'f=s'                    => \$SEARCH_F,
     'd=s'                    => \$DSID,
     'e=s'                    => \$ESID,
     'i=s'                    => \$SENSOR,
     'l=s'                    => \$LSID,
     'm=s'                    => \$SEARCH_CAT,
+    'n'                      => \$SEARCH_NEW,
+    'a'                      => \$AUTO,
     'o=s'                    => \$SEARCH_ENABLED,
     'p=s'                    => \$SEARCH_P,
     'r=s'                    => \$RULEDB,
@@ -138,6 +144,26 @@ elsif ( defined $SEARCH_CAT ) {
        my $RULEDB = $SENSH->{$SENSOR}->{'RULEDB'};
        if (is_defined_ruledb($RULEDB,$RDBH,$VERBOSE,$DEBUG) == 1) {
            $SENSH = search_rules_cat($SENSOR,$SENSH,$RULEDB,$RDBH,$SEARCH_CAT,$VERBOSE,$DEBUG);
+       }
+   }
+}
+elsif ( defined $SEARCH_F ) {
+   my ($RDBH) = init_statefile_ruledb();
+   my ($SENSH) = init_statefile_sensordb();
+   if (is_defined_sensor($SENSOR,$SENSH,$RDBH,$VERBOSE,$DEBUG) == 1) {
+       my $RULEDB = $SENSH->{$SENSOR}->{'RULEDB'};
+       if (is_defined_ruledb($RULEDB,$RDBH,$VERBOSE,$DEBUG) == 1) {
+           $SENSH = search_rules_flow($SENSOR,$SENSH,$RULEDB,$RDBH,$SEARCH_F,$VERBOSE,$DEBUG);
+       }
+   }
+}
+elsif ( defined $SEARCH_NEW ) {
+   my ($RDBH) = init_statefile_ruledb();
+   my ($SENSH) = init_statefile_sensordb();
+   if (is_defined_sensor($SENSOR,$SENSH,$RDBH,$VERBOSE,$DEBUG) == 1) {
+       my $RULEDB = $SENSH->{$SENSOR}->{'RULEDB'};
+       if (is_defined_ruledb($RULEDB,$RDBH,$VERBOSE,$DEBUG) == 1) {
+           $SENSH = search_new_rules($SENSOR,$SENSH,$RULEDB,$RDBH,$AUTO,$VERBOSE,$DEBUG);
        }
    }
 }
@@ -188,7 +214,7 @@ elsif ( $UPDATESENS ) {
    if (is_defined_sensor($SENSOR,$SENSH,$RDBH,$VERBOSE,$DEBUG) == 1) {
        my $RULEDB = $SENSH->{$SENSOR}->{'RULEDB'};
        if (is_defined_ruledb($RULEDB,$RDBH,$VERBOSE,$DEBUG) == 1) {
-           update_sensor_rules($SENSOR,$SENSH,$RDBH,$VERBOSE,$DEBUG);
+           update_sensor_rules($SENSOR,$SENSH,$RDBH,$AUTO,$VERBOSE,$DEBUG);
            #print_rule($LSID,$SENSOR,$SENSH,$RULEDB,$RDBH,$VERBOSE,$DEBUG);
        }
    }
@@ -200,6 +226,24 @@ print "[*] Finished main...\n" if ($VERBOSE||$DEBUG);
 exit;
 
 =head1 FUNCTIONS
+
+=head2 check_statfile_dir
+
+ Check if the dir to source and save statefiles exists.
+ Bail informally if not...
+
+=cut
+
+sub check_statfile_dir {
+    if ( not -d "/var/lib/polman/" ) {
+        print "[W] Statefile directory does not exist: /var/lib/polman/\n";
+        if ( not mkdir("/var/lib/polman/", 0744) ) {
+            print "[E] Could not create Statefile directory: /var/lib/polman/\n";
+            print "[I] Make sure /var/lib/polman/ exists and is writable!\n";
+            exit;
+        } 
+    }
+}
 
 =head2 init_statefile_ruledb
 
@@ -227,6 +271,20 @@ sub init_statefile_sensordb {
     return ($SENS::SENSORS);
 }
 
+=head2 init_statefile_sourcedb
+
+ Load persistant SourceDB if it exists.
+
+=cut
+
+sub init_statefile_sourcedb {
+    print "[*] Loading sourcedb...\n" if ($VERBOSE||$DEBUG);
+    use Polman::State SO => '/var/lib/polman/pm-source.db';
+    #use Polman::State SO => ['/var/lib/polman/pm-source.db', readonly => 1];
+    return ($SO::SOURCE) if defined $SO::SOURCE; # defeat "possible typo" for the moment
+    return ($SO::SOURCE);
+}
+
 =head2 update_ruledb
 
  Updates a ruledb with rules found in its specified path
@@ -252,16 +310,16 @@ sub update_ruledb {
 sub show_status {
     my ($VERBOSE,$DEBUG) = @_;
     my ($SENSH) = init_statefile_sensordb();
+    my ($RDBH) = init_statefile_ruledb();
     my $count = 0;
     # Sensor info $SENS::SENSORS
     foreach my $SENS ( keys %$SENSH ) {
         next if not defined $SENS;
         next if $SENS eq "";
-        #if (is_defined_sensordb($SENS,$SENSH,$VERBOSE,$DEBUG)) {
-            #show_sensor_status($SENS,$SENSH,$VERBOSE,$DEBUG);
-        #}
+        if (is_defined_sensor($SENS,$SENSH,$RDBH,$VERBOSE,$DEBUG)) {
+            show_sensor_status($SENS,$SENSH,$VERBOSE,$DEBUG);
+        }
     }
-    my ($RDBH) = init_statefile_ruledb();
     # Rule DB info $RDB::RULEDB
     foreach my $RDB (keys %$RDBH) {
         next if not defined $RDB;
@@ -284,7 +342,8 @@ sub show_menu_main {
     print "  Item |  Description                        \n";
     print "    1  |  Edit Rule DB                       \n";
     print "    2  |  Edit Sensor                        \n";
-#    print "    3  |  Status                             \n";
+#    print "    3  |  Edit rule source                   \n";
+    print "    4  |  Status                             \n";
     print "   99  |  Save & Exit                        \n";
     print "Enter Item: ";
 }
@@ -303,7 +362,7 @@ sub run_config {
         show_menu_main();
         my $RESP = <STDIN>;
         chomp $RESP;
-        if ( $RESP eq "" ) {
+        if ( $RESP eq "" or not $RESP =~ /\d+/ ) {
             print "[*] Not a valid entery!\n";
         }
         elsif ( $RESP == 1 ) {
@@ -318,6 +377,11 @@ sub run_config {
             $SENS::SENSORS = $SENSH;
         }
         elsif ( $RESP == 3 ) {
+            #my ($SH) = init_statefile_sourcedb();
+            #$SH = edit_rulesource($SH,$VERBOSE,$DEBUG);
+            #$SO::SOURCE = $SH;
+        }
+        elsif ( $RESP == 4 ) {
             show_status();
         }
         elsif ( $RESP == 99 ) {

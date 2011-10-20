@@ -17,7 +17,7 @@ x* Generate sid-msg.map for sensor rules (or ruledb?)
 
 
 # 0.4
- * If not exists, mkdir /var/lib/polman/
+x* If not exists, mkdir /var/lib/polman/
  * We might do a cmdline "search" so we can look for new rules
    in ruledb, and process them in a batch or rule by rule...
  * download rules from web (also via proxys) 
@@ -25,6 +25,7 @@ x* Generate sid-msg.map for sensor rules (or ruledb?)
    that has "flowbits:noalert" are used by other rules, if
    not, give the admin/user a dialog to enable/disable/skip.
  * Make so that you can search for CVE-xxxx-xxx (enable/disable)
+x* Make it so, that you can disable rules based on flowbits :)
 
 # 0.5
  * Make subs for processing searches by services/port - Johannes Lavre

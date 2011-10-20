@@ -235,7 +235,7 @@ sub edit_sensor {
         show_menu_sensor($SENSOR,$VERBOSE,$DEBUG);
         my $RESP = <STDIN>;
         chomp $RESP;
-        if ( $RESP eq "" || not $RESP =~ /\d+/) {
+        if ( $RESP eq "" or not $RESP =~ /\d+/) {
             print "[*] Not a valid entery!\n";
         }
         elsif ( $RESP == 1 ) {
@@ -266,7 +266,7 @@ sub edit_sensor {
              $SENSH = set_sensor_sidmsgmap($SENSOR,$SENSH,$VERBOSE,$DEBUG);
         }
         elsif ( $RESP == 10 ) {
-             $SENSH = update_sensor_rules($SENSOR,$SENSH,$RDBH,$VERBOSE,$DEBUG);
+             $SENSH = update_sensor_rules($SENSOR,$SENSH,$RDBH,1,$VERBOSE,$DEBUG);
         }
         elsif ( $RESP == 99 ) {
             $run = 1;
@@ -472,7 +472,7 @@ sub set_sensor_sidmsgmap {
 =cut
 
 sub update_sensor_rules {
-    my ($SENSOR,$SENSH,$RDBH,$VERBOSE,$DEBUG) = @_;
+    my ($SENSOR,$SENSH,$RDBH,$AUTO,$VERBOSE,$DEBUG) = @_;
 
     if ( not defined $SENSH->{$SENSOR}) {
         print "[E] Sensor $SENSOR does not exist!!!\n";
@@ -504,8 +504,9 @@ sub update_sensor_rules {
     }
    
     # if ruledb has been updated, add new sigs to sensor in its default state.
-    print "[*] Checking for new rules in ruledb...\n";
-    $SENSH = check_for_new_ruledb_sids($SENSOR,$SENSH,$RDBH,$RULEDB,"current",$VERBOSE,$DEBUG);
+    # Maybe add an cmdline option to --auto-enable-new (default|disabled|enabled|ask)
+    print "[*] Auto enabling new rules from ruledb in its default state...\n" if $AUTO;
+    $SENSH = check_for_new_ruledb_sids($SENSOR,$SENSH,$RULEDB,$RDBH,"default",$VERBOSE,$DEBUG) if $AUTO;
 
     if (defined $SENSH->{$SENSOR}->{1}->{'RULES'}) {
         print "[*] Processing gid 1 rules...\n";

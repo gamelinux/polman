@@ -54,13 +54,8 @@ use vars qw (@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 =cut
 
 sub parse_all_rule_files {
-    my ($RULESDIR,$VERBOSE,$DEBUG) = @_;
+    my ($RULESDIR,$NRULEDB,$VERBOSE,$DEBUG) = @_;
     my @FILES;
-    my $NRULEDB = {};
-
-    #if (not defined $RULESDIR) {
-    #   $SENS::SENSORS->{$SENSOR}
-    #}
 
     # Open the directory
     print "[*] Looking for rulefiles in $RULESDIR\n";
