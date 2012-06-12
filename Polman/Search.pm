@@ -505,7 +505,7 @@ sub print_rule {
 
     if ( defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid} && 
          defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} &&
-         defined $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} == 1) {
+         $SENSH->{$SENSOR}->{1}->{'RULES'}->{$sid}->{'enabled'} == 1) {
         $enabled = "enabled";
     } else {
         $enabled = "disabled";

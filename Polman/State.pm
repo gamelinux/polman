@@ -108,7 +108,7 @@ END {
 		    print RC Data::Dumper->Dump([\@entry],["*$key"]) or die;
             #print RC Data::Dumper->Dump([\@entry],['@'.$key]) or die;
 		}
-		if (defined %entry) {
+		if (%entry) {
 		    print RC Data::Dumper->Dump([\%entry],["*$key"]) or die;
             #print RC Data::Dumper->Dump([\%entry],[$key]) or die;
 		}

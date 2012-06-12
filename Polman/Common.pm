@@ -302,6 +302,7 @@ sub count_enabled_rules {
     my $rules = $SENSH->{$SENSOR}->{1}->{'RULES'};
     my $count = 0;
     foreach (keys %$rules) {
+        next if not defined $rules->{$_}{'enabled'}; 
         next if $rules->{$_}{'enabled'} == 0;
         $count ++;
     }

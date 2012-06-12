@@ -218,8 +218,12 @@ sub show_ruledb_status {
 
     my $RDIRS = $RDBH->{$RULEDB}->{'RULESDIRS'};
     foreach my $RDIRN ( %$RDIRS ) {
+        next if not defined $RDIRN;
+        next if $RDIRN eq '';
         next if not $RDIRN =~ /\d+/;
         my $RDIR = $RDIRS->{$RDIRN};
+        next if not defined $RDIR;
+        next if $RDIR eq '';
         print "[i] Rules Dir    : $RDIR\n";
     }
     my $CT=localtime($RDBH->{$RULEDB}->{'CREATED'});
