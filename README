@@ -13,7 +13,7 @@ a ruledb for suricata10, and load the vrt rules
 and the corrosponding ET-suricata rules into it.
 
 Currently, polman will activate all rules in the ruledb
-that is default activated from the the vendor (vrt/et/others),
+that is default activated from the vendor (vrt/et/others),
 on the sensors that are associated with the ruledb.
 The activatation happens the first time you write out
 the rule file(s) to disk.
